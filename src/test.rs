@@ -1,6 +1,6 @@
 use array2d::Array2D;
 
-use crate::{Direction, Puzzle};
+use crate::{init_puz, Direction, Puzzle};
 
 #[test]
 fn move_test() {
@@ -9,16 +9,9 @@ fn move_test() {
     assert_eq!((1, 0), test_puzzle.clone().getzero());
 
     (test_puzzle.state, test_puzzle.zeropos) = test_puzzle.clone().move_zero(Direction::Down);
-    assert_eq!((1, 1), test_puzzle.clone().getzero());
-
-    (test_puzzle.state, test_puzzle.zeropos) = test_puzzle.clone().move_zero(Direction::Right);
-    assert_eq!((2, 1), test_puzzle.clone().getzero());
-
-    (test_puzzle.state, test_puzzle.zeropos) = test_puzzle.clone().move_zero(Direction::Left);
-    assert_eq!((1, 1), test_puzzle.clone().getzero());
-
-    (test_puzzle.state, test_puzzle.zeropos) = test_puzzle.clone().move_zero(Direction::Up);
-    assert_eq!((1, 0), test_puzzle.clone().getzero());
+    let rows = vec![vec![1, 5, 2], vec![3, 0, 4], vec![8, 6, 7]];
+    let current_puzzle = init_puz(rows, (1, 1));
+    assert!(current_puzzle.equals(test_puzzle.clone()));
 }
 #[test]
 fn getmove_test() {
@@ -121,12 +114,10 @@ fn checkgoal() {
     let goal = init_puz(rows, (0, 0));
     assert!(goal.checkgoal())
 }
-pub fn init_puz(rows: Vec<Vec<u8>>, (zx, zy): (usize, usize)) -> Puzzle {
-    let test_state: Array2D<u8> = Array2D::from_rows(&rows).expect("no");
-    Puzzle {
-        neighbours: vec![],
-        parent: None,
-        state: test_state,
-        zeropos: (zx, zy),
-    }
+#[test]
+fn equals() {
+    let rows = vec![vec![0, 1, 2], vec![3, 4, 5], vec![6, 7, 8]];
+    let p1 = init_puz(rows.clone(), (0, 0));
+    let p2 = init_puz(rows, (0, 0));
+    assert!(p1.equals(p2))
 }

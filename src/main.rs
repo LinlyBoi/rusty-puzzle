@@ -1,4 +1,5 @@
 use array2d::Array2D;
+mod solvers;
 #[cfg(test)]
 mod test;
 
@@ -6,15 +7,23 @@ fn main() {
     println!("Hello, world!");
 }
 #[derive(Debug, Clone)]
-struct Puzzle {
+pub struct Puzzle {
     state: Array2D<u8>,
     neighbours: Vec<Puzzle>,
     parent: Option<Box<Puzzle>>,
     zeropos: (usize, usize),
 }
 impl Puzzle {
-    fn get_child(self) -> Puzzle {
-        todo!()
+    fn getchildren(self) -> Vec<Puzzle> {
+        let mut children: Vec<Puzzle> = vec![];
+        let moves = self.clone().getmoves();
+        for direction in moves {
+            let mut temp_child: Puzzle = self.clone();
+            (temp_child.state, temp_child.zeropos) = self.clone().move_zero(direction);
+            temp_child.parent = Some(Box::new(self.clone()));
+            children.push(temp_child);
+        }
+        children
     }
 
     fn move_zero(self, dir: Direction) -> (Array2D<u8>, (usize, usize)) {
@@ -66,10 +75,22 @@ impl Puzzle {
                 moves.push(Direction::Down);
                 moves.push(Direction::Up);
             }
-            2 => moves.push(Direction::Down),
+            2 => moves.push(Direction::Up),
             _ => {}
         }
         moves
+    }
+    fn checkgoal(self) -> bool {
+        //hard coded for now
+        let rows = vec![vec![0, 1, 2], vec![3, 4, 5], vec![6, 7, 8]];
+        let goal: Array2D<u8> = Array2D::from_rows(&rows).expect("no");
+        let matching = goal
+            .as_row_major()
+            .iter()
+            .zip(&self.state.as_row_major())
+            .filter(|&(a, b)| a == b)
+            .count();
+        matching == goal.row_len() * goal.column_len()
     }
 }
 #[derive(Debug)]

@@ -67,6 +67,60 @@ fn getmove_test() {
     let moves = test_puzzle.getmoves();
     assert_eq!(2, moves.len());
 }
+
+#[test]
+fn getchildren_test() {
+    let rows = vec![vec![0, 5, 2], vec![3, 1, 4], vec![8, 6, 7]];
+    let test_puzzle = init_puz(rows, (0, 0));
+    let children = test_puzzle.getchildren();
+
+    assert_eq!(2, children.len());
+    let rows = vec![vec![1, 0, 2], vec![3, 5, 4], vec![8, 6, 7]];
+    let test_puzzle = init_puz(rows, (1, 0));
+    let children = test_puzzle.getchildren();
+    assert_eq!(3, children.len());
+
+    let rows = vec![vec![2, 5, 0], vec![3, 1, 4], vec![8, 6, 7]];
+    let test_puzzle = init_puz(rows, (2, 0));
+    let children = test_puzzle.getchildren();
+    assert_eq!(2, children.len());
+
+    let rows = vec![vec![1, 5, 2], vec![0, 3, 4], vec![8, 6, 7]];
+    let test_puzzle = init_puz(rows, (0, 1));
+    let children = test_puzzle.getchildren();
+    assert_eq!(3, children.len());
+
+    let rows = vec![vec![1, 5, 2], vec![3, 0, 4], vec![8, 6, 7]];
+    let test_puzzle = init_puz(rows, (1, 1));
+    let children = test_puzzle.getchildren();
+    assert_eq!(4, children.len());
+
+    let rows = vec![vec![1, 5, 2], vec![3, 4, 0], vec![8, 6, 7]];
+    let test_puzzle = init_puz(rows, (2, 1));
+    let children = test_puzzle.getchildren();
+    assert_eq!(3, children.len());
+
+    let rows = vec![vec![1, 5, 2], vec![3, 4, 8], vec![0, 6, 7]];
+    let test_puzzle = init_puz(rows, (0, 2));
+    let children = test_puzzle.getchildren();
+    assert_eq!(2, children.len());
+
+    let rows = vec![vec![1, 5, 2], vec![3, 4, 8], vec![6, 0, 7]];
+    let test_puzzle = init_puz(rows, (1, 2));
+    let children = test_puzzle.getchildren();
+    assert_eq!(3, children.len());
+
+    let rows = vec![vec![1, 5, 2], vec![3, 4, 8], vec![6, 7, 0]];
+    let test_puzzle = init_puz(rows, (2, 2));
+    let children = test_puzzle.getchildren();
+    assert_eq!(2, children.len());
+}
+#[test]
+fn checkgoal() {
+    let rows = vec![vec![0, 1, 2], vec![3, 4, 5], vec![6, 7, 8]];
+    let goal = init_puz(rows, (0, 0));
+    assert!(goal.checkgoal())
+}
 fn init_puz(rows: Vec<Vec<u8>>, (zx, zy): (usize, usize)) -> Puzzle {
     let test_state: Array2D<u8> = Array2D::from_rows(&rows).expect("no");
     Puzzle {

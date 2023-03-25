@@ -121,7 +121,7 @@ fn checkgoal() {
     let goal = init_puz(rows, (0, 0));
     assert!(goal.checkgoal())
 }
-fn init_puz(rows: Vec<Vec<u8>>, (zx, zy): (usize, usize)) -> Puzzle {
+pub fn init_puz(rows: Vec<Vec<u8>>, (zx, zy): (usize, usize)) -> Puzzle {
     let test_state: Array2D<u8> = Array2D::from_rows(&rows).expect("no");
     Puzzle {
         neighbours: vec![],

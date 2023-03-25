@@ -1,6 +1,8 @@
 use array2d::Array2D;
 mod solvers;
 #[cfg(test)]
+mod solvers_test;
+#[cfg(test)]
 mod test;
 
 fn main() {

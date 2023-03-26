@@ -1,8 +1,8 @@
-use std::collections::HashSet;
+use std::collections::{HashSet, VecDeque};
 
 use array2d::Array2D;
 
-use crate::solvers::solve_dfs;
+use crate::solvers::{solve_bfs, solve_dfs};
 
 mod solvers;
 #[cfg(test)]
@@ -12,12 +12,15 @@ mod test;
 
 fn main() {
     println!("Hello, world!");
-    // let rows = vec![vec![5, 2, 8], vec![4, 1, 7], vec![0, 3, 6]];
-    let rows = vec![vec![1, 7, 2], vec![0, 4, 3], vec![8, 6, 5]];
-    let mut test_puzzle = init_puz(rows, (0, 1));
-    // _ = solve_dfs(vec![test_puzzle.clone()], HashSet::new()).expect("Nope");
-    (test_puzzle.state, test_puzzle.zeropos) = test_puzzle.clone().move_zero(Direction::Up);
-    println!("{:#?}", test_puzzle.state)
+    let rows = vec![vec![5, 2, 8], vec![4, 1, 7], vec![0, 3, 6]];
+    // let rows = vec![vec![1, 7, 2], vec![0, 4, 3], vec![8, 6, 5]];
+    // let rows = vec![vec![1, 2, 0], vec![3, 4, 5], vec![6, 7, 8]];
+    let test_puzzle = init_puz(rows);
+    let mut vec_q: VecDeque<Puzzle> = VecDeque::new();
+    vec_q.push_back(test_puzzle.clone());
+    let solly = solve_dfs(vec_q, HashSet::new()).expect("Nope");
+    // let solly = solve_bfs(vec_q, HashSet::new()).expect("Nope");
+    // dbg!(solly);
 }
 #[derive(Debug, Clone, Hash, Eq, PartialEq)]
 pub struct Puzzle {
@@ -27,47 +30,47 @@ pub struct Puzzle {
     zeropos: (usize, usize),
 }
 impl Puzzle {
-    fn getchildren(self) -> Vec<Puzzle> {
+    fn getchildren(mut self) -> Self {
         let mut children: Vec<Puzzle> = vec![];
         let moves = self.clone().getmoves();
         for direction in moves {
-            let mut temp_child: Puzzle = self.clone();
-            (temp_child.state, temp_child.zeropos) = self.clone().move_zero(direction);
+            let mut temp_child: Puzzle;
+            temp_child = self.clone().move_zero(direction);
             temp_child.parent = Some(Box::new(self.clone()));
             children.push(temp_child);
         }
-        children
+        self.neighbours = children;
+        self
     }
 
-    fn move_zero(self, dir: Direction) -> (Array2D<u8>, (usize, usize)) {
-        let mut new_state = self.clone().state;
+    fn move_zero(mut self, dir: Direction) -> Self {
+        let old_state = self.clone().state;
         let (x, y) = self.clone().getzero();
         let (zx, zy): (usize, usize);
         let temp_value: u8;
 
         match dir {
             Direction::Up => {
-                temp_value = *new_state.get(x, y - 1).expect("No");
-                (zx, zy) = (x, y - 1);
-            }
-            Direction::Down => {
-                temp_value = *new_state.get(x, y + 1).expect("No");
-                (zx, zy) = (x, y + 1);
-            }
-            Direction::Left => {
-                temp_value = *new_state.get(x - 1, y).expect("No");
+                temp_value = old_state[(x - 1, y)];
                 (zx, zy) = (x - 1, y);
             }
-            Direction::Right => {
-                temp_value = *new_state.get(x + 1, y).expect("No");
+            Direction::Down => {
+                temp_value = old_state[(x + 1, y)];
                 (zx, zy) = (x + 1, y);
             }
+            Direction::Left => {
+                temp_value = old_state[(x, y - 1)];
+                (zx, zy) = (x, y - 1);
+            }
+            Direction::Right => {
+                temp_value = old_state[(x, y + 1)];
+                (zx, zy) = (x, y + 1);
+            }
         }
-        println!("{temp_value}, {}", new_state.get(1, 0).expect("A"));
-        _ = new_state.set(y, x, temp_value);
-        _ = new_state.set(zy, zx, 0);
-
-        (new_state, (zx, zy))
+        self.state[(x, y)] = temp_value;
+        self.state[(zx, zy)] = 0;
+        self.zeropos = (zx, zy);
+        self
     }
 
     fn getzero(self) -> (usize, usize) {
@@ -76,20 +79,20 @@ impl Puzzle {
 
     fn getmoves(self) -> Vec<Direction> {
         let mut moves: Vec<Direction> = vec![];
-        match self.zeropos.0 {
+        match self.zeropos.1 {
             0 => moves.push(Direction::Right),
             1 => {
-                moves.push(Direction::Right);
                 moves.push(Direction::Left);
+                moves.push(Direction::Right);
             }
             2 => moves.push(Direction::Left),
             _ => {}
         }
-        match self.zeropos.1 {
+        match self.zeropos.0 {
             0 => moves.push(Direction::Down),
             1 => {
-                moves.push(Direction::Down);
                 moves.push(Direction::Up);
+                moves.push(Direction::Down);
             }
             2 => moves.push(Direction::Up),
             _ => {}
@@ -116,6 +119,8 @@ impl Puzzle {
             .zip(&self.state.as_row_major())
             .filter(|&(a, b)| a == b)
             .count();
+        // dbg!(other_state.clone());
+        // dbg!(self.clone());
         matching == other_state.row_len() * other_state.column_len()
     }
 }
@@ -127,12 +132,21 @@ enum Direction {
     Right,
 }
 
-pub fn init_puz(rows: Vec<Vec<u8>>, (zx, zy): (usize, usize)) -> Puzzle {
+pub fn init_puz(rows: Vec<Vec<u8>>) -> Puzzle {
     let test_state: Array2D<u8> = Array2D::from_rows(&rows).expect("no");
+    let (zx, zy): (usize, usize) = find_index(test_state.clone(), 0).expect("OUT OF BOUNDS");
     Puzzle {
         neighbours: vec![],
         parent: None,
         state: test_state,
         zeropos: (zx, zy),
     }
+}
+pub fn find_index(twod: Array2D<u8>, value: u8) -> Option<(usize, usize)> {
+    for index in twod.indices_row_major() {
+        if twod[(index)] == value {
+            return Some(index);
+        }
+    }
+    None
 }

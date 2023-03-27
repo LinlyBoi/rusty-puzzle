@@ -1,6 +1,6 @@
 use std::collections::{HashSet, VecDeque};
 
-use crate::{find_index, Puzzle};
+use crate::{find_index, init_puz, Puzzle};
 
 #[derive(Debug)]
 pub struct Solution {
@@ -9,18 +9,26 @@ pub struct Solution {
     explored: HashSet<Puzzle>,
 }
 impl Solution {
-    pub fn from_goal(goal: Puzzle, explored: HashSet<Puzzle>, cost: usize) -> Solution {
-        // dbg!(goal.clone());
-        let mut path: Vec<Puzzle> = vec![];
+    pub fn from_goal(
+        goal: Puzzle,
+        mut path: Vec<Puzzle>,
+        explored: HashSet<Puzzle>,
+        cost: usize,
+    ) -> Solution {
         match goal.clone().parent {
-            None => Solution {
-                goal_path: path.clone(),
-                cost,
-                explored: explored.clone(),
-            },
+            None => {
+                let rows = vec![vec![0, 1, 2], vec![3, 4, 5], vec![6, 7, 8]];
+                let actual_goal = init_puz(rows);
+                path.push(actual_goal);
+                Solution {
+                    goal_path: path.clone(),
+                    cost,
+                    explored: explored.clone(),
+                }
+            }
             Some(puzzle) => {
                 path.push(*puzzle.clone());
-                Self::from_goal(*puzzle, explored, cost + 1)
+                Self::from_goal(*puzzle, path, explored, cost + 1)
             }
         }
     }
@@ -32,15 +40,16 @@ pub fn solve_dfs(
     mut frontier: VecDeque<Puzzle>,
     mut explored: HashSet<Puzzle>,
 ) -> Option<Solution> {
-    match frontier.pop_back() {
+    match frontier.pop_front() {
         None => None,
-        Some(node) => {
+        Some(mut node) => {
             explored.insert(node.clone());
             match node.clone().checkgoal() {
-                true => Some(Solution::from_goal(node.clone(), explored, 0)),
+                true => Some(Solution::from_goal(node.clone(), vec![], explored, 0)),
                 false => {
-                    let parent = node.clone().getchildren();
-                    for child in parent.neighbours {
+                    node = node.getchildren();
+                    for child in node.neighbours {
+                        // dbg!(child.clone().parent);
                         let mut dup = false;
                         for node in explored.clone() {
                             if child.clone().equals(node) {
@@ -58,12 +67,7 @@ pub fn solve_dfs(
                             frontier.push_back(child)
                         }
                     }
-                    dbg!(
-                        node.state,
-                        frontier.clone().len(),
-                        explored.clone().len(),
-                        // explored.clone()
-                    );
+                    // dbg!(node.state, frontier.clone().len(), explored.clone().len());
                     solve_dfs(frontier, explored)
                 }
             }
@@ -74,12 +78,12 @@ pub fn solve_bfs(
     mut frontier: VecDeque<Puzzle>,
     mut explored: HashSet<Puzzle>,
 ) -> Option<Solution> {
-    match frontier.pop_front() {
+    match frontier.pop_back() {
         None => None,
         Some(node) => {
             explored.insert(node.clone());
             match node.clone().checkgoal() {
-                true => Some(Solution::from_goal(node.clone(), explored, 0)),
+                true => Some(Solution::from_goal(node.clone(), vec![], explored, 0)),
                 false => {
                     let parent = node.clone().getchildren();
                     for child in parent.neighbours {
@@ -100,12 +104,7 @@ pub fn solve_bfs(
                             frontier.push_back(child)
                         }
                     }
-                    dbg!(
-                        node.state,
-                        frontier.clone().len(),
-                        explored.clone().len(),
-                        // explored.clone()
-                    );
+                    dbg!(node.state, frontier.clone().len(), explored.clone().len());
                     solve_bfs(frontier, explored)
                 }
             }

@@ -7,3 +7,4 @@ edition = "2021"
 
 [dependencies]
 array2d = "0.3.0"
+linked_hash_set = "0.1.4"

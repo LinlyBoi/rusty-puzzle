@@ -14,13 +14,15 @@ fn main() {
     println!("Hello, world!");
     // let rows = vec![vec![5, 2, 8], vec![4, 1, 7], vec![0, 3, 6]];
     // let rows = vec![vec![1, 7, 2], vec![0, 4, 3], vec![8, 6, 5]];
-    let rows = vec![vec![1, 2, 0], vec![3, 4, 5], vec![6, 7, 8]];
+    let rows = vec![vec![1, 2, 3], vec![0, 4, 5], vec![6, 7, 8]];
     let test_puzzle = init_puz(rows);
     let mut vec_q: VecDeque<Puzzle> = VecDeque::new();
     vec_q.push_back(test_puzzle.clone());
     // let solly = solve_dfs(vec_q, HashSet::new()).expect("Nope");
     let solly = solve_bfs(vec_q, HashSet::new()).expect("Nope");
-    dbg!(solly);
+    for step in solly.get_path() {
+        dbg!("funny path:", step.state);
+    }
 }
 #[derive(Debug, Clone, Hash, Eq, PartialEq)]
 pub struct Puzzle {
@@ -31,15 +33,13 @@ pub struct Puzzle {
 }
 impl Puzzle {
     fn getchildren(mut self) -> Self {
-        let mut children: Vec<Puzzle> = vec![];
         let moves = self.clone().getmoves();
         for direction in moves {
             let mut temp_child: Puzzle;
             temp_child = self.clone().move_zero(direction);
             temp_child.parent = Some(Box::new(self.clone()));
-            children.push(temp_child);
+            self.neighbours.push(temp_child);
         }
-        self.neighbours = children;
         self
     }
 
@@ -82,8 +82,8 @@ impl Puzzle {
         match self.zeropos.0 {
             0 => moves.push(Direction::Down),
             1 => {
-                moves.push(Direction::Up);
                 moves.push(Direction::Down);
+                moves.push(Direction::Up);
             }
             2 => moves.push(Direction::Up),
             _ => {}
@@ -91,8 +91,8 @@ impl Puzzle {
         match self.zeropos.1 {
             0 => moves.push(Direction::Right),
             1 => {
-                moves.push(Direction::Left);
                 moves.push(Direction::Right);
+                moves.push(Direction::Left);
             }
             2 => moves.push(Direction::Left),
             _ => {}

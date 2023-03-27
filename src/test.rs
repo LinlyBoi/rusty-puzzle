@@ -176,5 +176,5 @@ fn twodee() {
 fn solution_creation() {
     let rows = vec![vec![0, 1, 2], vec![3, 4, 5], vec![6, 7, 8]];
     let p1 = init_puz(rows.clone());
-    _ = Solution::from_goal(p1, HashSet::new(), 0)
+    _ = Solution::from_goal(p1, vec![], HashSet::new(), 0)
 }

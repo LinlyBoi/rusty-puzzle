@@ -10,6 +10,7 @@ pub struct Solution {
 }
 impl Solution {
     pub fn from_goal(goal: Puzzle, explored: HashSet<Puzzle>, cost: usize) -> Solution {
+        // dbg!(goal.clone());
         let mut path: Vec<Puzzle> = vec![];
         match goal.clone().parent {
             None => Solution {
@@ -18,8 +19,8 @@ impl Solution {
                 explored: explored.clone(),
             },
             Some(puzzle) => {
-                path.push(*puzzle);
-                Self::from_goal(goal, explored, cost + 1)
+                path.push(*puzzle.clone());
+                Self::from_goal(*puzzle, explored, cost + 1)
             }
         }
     }
@@ -28,6 +29,48 @@ impl Solution {
     }
 }
 pub fn solve_dfs(
+    mut frontier: VecDeque<Puzzle>,
+    mut explored: HashSet<Puzzle>,
+) -> Option<Solution> {
+    match frontier.pop_back() {
+        None => None,
+        Some(node) => {
+            explored.insert(node.clone());
+            match node.clone().checkgoal() {
+                true => Some(Solution::from_goal(node.clone(), explored, 0)),
+                false => {
+                    let parent = node.clone().getchildren();
+                    for child in parent.neighbours {
+                        let mut dup = false;
+                        for node in explored.clone() {
+                            if child.clone().equals(node) {
+                                dup = true;
+                                break;
+                            }
+                        }
+                        for node in frontier.clone() {
+                            if child.clone().equals(node) {
+                                dup = true;
+                                break;
+                            }
+                        }
+                        if !dup {
+                            frontier.push_back(child)
+                        }
+                    }
+                    dbg!(
+                        node.state,
+                        frontier.clone().len(),
+                        explored.clone().len(),
+                        // explored.clone()
+                    );
+                    solve_dfs(frontier, explored)
+                }
+            }
+        }
+    }
+}
+pub fn solve_bfs(
     mut frontier: VecDeque<Puzzle>,
     mut explored: HashSet<Puzzle>,
 ) -> Option<Solution> {
@@ -54,47 +97,15 @@ pub fn solve_dfs(
                             }
                         }
                         if !dup {
-                            frontier.push_front(child)
+                            frontier.push_back(child)
                         }
                     }
-                    dbg!(node.state, frontier.clone().len(), explored.clone().len());
-                    solve_dfs(frontier, explored)
-                }
-            }
-        }
-    }
-}
-pub fn solve_bfs(
-    mut frontier: VecDeque<Puzzle>,
-    mut explored: HashSet<Puzzle>,
-) -> Option<Solution> {
-    match frontier.pop_front() {
-        None => None,
-        Some(node) => {
-            explored.insert(node.clone());
-            match node.clone().checkgoal() {
-                true => Some(Solution::from_goal(node.clone(), explored, 0)),
-                false => {
-                    let children = node.clone().getchildren().neighbours;
-                    for child in children {
-                        let mut dup = false;
-                        for node in explored.clone() {
-                            if child.clone().equals(node) {
-                                dup = true;
-                                break;
-                            }
-                        }
-                        for node in frontier.clone() {
-                            if child.clone().equals(node) {
-                                dup = true;
-                                break;
-                            }
-                        }
-                        if !dup {
-                            frontier.push_front(node.clone());
-                        }
-                    }
-                    dbg!(node.state, frontier.clone().len(), explored.clone().len());
+                    dbg!(
+                        node.state,
+                        frontier.clone().len(),
+                        explored.clone().len(),
+                        // explored.clone()
+                    );
                     solve_bfs(frontier, explored)
                 }
             }

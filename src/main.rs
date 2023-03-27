@@ -12,15 +12,15 @@ mod test;
 
 fn main() {
     println!("Hello, world!");
-    let rows = vec![vec![5, 2, 8], vec![4, 1, 7], vec![0, 3, 6]];
+    // let rows = vec![vec![5, 2, 8], vec![4, 1, 7], vec![0, 3, 6]];
     // let rows = vec![vec![1, 7, 2], vec![0, 4, 3], vec![8, 6, 5]];
-    // let rows = vec![vec![1, 2, 0], vec![3, 4, 5], vec![6, 7, 8]];
+    let rows = vec![vec![1, 2, 0], vec![3, 4, 5], vec![6, 7, 8]];
     let test_puzzle = init_puz(rows);
     let mut vec_q: VecDeque<Puzzle> = VecDeque::new();
     vec_q.push_back(test_puzzle.clone());
-    let solly = solve_dfs(vec_q, HashSet::new()).expect("Nope");
-    // let solly = solve_bfs(vec_q, HashSet::new()).expect("Nope");
-    // dbg!(solly);
+    // let solly = solve_dfs(vec_q, HashSet::new()).expect("Nope");
+    let solly = solve_bfs(vec_q, HashSet::new()).expect("Nope");
+    dbg!(solly);
 }
 #[derive(Debug, Clone, Hash, Eq, PartialEq)]
 pub struct Puzzle {
@@ -79,15 +79,6 @@ impl Puzzle {
 
     fn getmoves(self) -> Vec<Direction> {
         let mut moves: Vec<Direction> = vec![];
-        match self.zeropos.1 {
-            0 => moves.push(Direction::Right),
-            1 => {
-                moves.push(Direction::Left);
-                moves.push(Direction::Right);
-            }
-            2 => moves.push(Direction::Left),
-            _ => {}
-        }
         match self.zeropos.0 {
             0 => moves.push(Direction::Down),
             1 => {
@@ -95,6 +86,15 @@ impl Puzzle {
                 moves.push(Direction::Down);
             }
             2 => moves.push(Direction::Up),
+            _ => {}
+        }
+        match self.zeropos.1 {
+            0 => moves.push(Direction::Right),
+            1 => {
+                moves.push(Direction::Left);
+                moves.push(Direction::Right);
+            }
+            2 => moves.push(Direction::Left),
             _ => {}
         }
         moves

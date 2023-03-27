@@ -12,17 +12,16 @@ mod test;
 
 fn main() {
     println!("Hello, world!");
-    // let rows = vec![vec![5, 2, 8], vec![4, 1, 7], vec![0, 3, 6]];
-    // let rows = vec![vec![1, 7, 2], vec![0, 4, 3], vec![8, 6, 5]];
-    let rows = vec![vec![1, 2, 3], vec![0, 4, 5], vec![6, 7, 8]];
+    let rows = vec![vec![1, 4, 2], vec![3, 5, 8], vec![6, 7, 0]];
     let test_puzzle = init_puz(rows);
     let mut vec_q: VecDeque<Puzzle> = VecDeque::new();
     vec_q.push_back(test_puzzle.clone());
-    // let solly = solve_dfs(vec_q, HashSet::new()).expect("Nope");
-    let solly = solve_bfs(vec_q, HashSet::new()).expect("Nope");
-    for step in solly.get_path() {
+    let solly = solve_dfs(vec_q, HashSet::new()).expect("Nope");
+    // let solly = solve_bfs(vec_q, HashSet::new()).expect("BFS is sucks");
+    for step in solly.clone().get_path() {
         dbg!("funny path:", step.state);
     }
+    dbg!(solly.get_cost());
 }
 #[derive(Debug, Clone, Hash, Eq, PartialEq)]
 pub struct Puzzle {
@@ -30,16 +29,19 @@ pub struct Puzzle {
     neighbours: Vec<Puzzle>,
     parent: Option<Box<Puzzle>>,
     zeropos: (usize, usize),
+    score: Array2D<u8>,
 }
 impl Puzzle {
-    fn getchildren(mut self) -> Self {
+    fn getchildren(mut self, h: Heust) -> Self {
         let moves = self.clone().getmoves();
+        let mut children: Vec<Puzzle> = vec![];
         for direction in moves {
             let mut temp_child: Puzzle;
             temp_child = self.clone().move_zero(direction);
             temp_child.parent = Some(Box::new(self.clone()));
-            self.neighbours.push(temp_child);
+            children.push(temp_child);
         }
+        self.neighbours = children;
         self
     }
 
@@ -131,6 +133,11 @@ enum Direction {
     Left,
     Right,
 }
+enum Heust {
+    Mann,
+    Eucl,
+    NoH,
+}
 
 pub fn init_puz(rows: Vec<Vec<u8>>) -> Puzzle {
     let test_state: Array2D<u8> = Array2D::from_rows(&rows).expect("no");
@@ -140,6 +147,7 @@ pub fn init_puz(rows: Vec<Vec<u8>>) -> Puzzle {
         parent: None,
         state: test_state,
         zeropos: (zx, zy),
+        score: Array2D::filled_with(0, 3, 3),
     }
 }
 pub fn find_index(twod: Array2D<u8>, value: u8) -> Option<(usize, usize)> {

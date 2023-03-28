@@ -29,6 +29,26 @@ fn move_test_up() {
     let current_puzzle = init_puz(rows);
     assert!(current_puzzle.equals(test_puzzle.clone()));
 }
+#[test]
+fn move_test_left() {
+    let rows = vec![vec![1, 5, 2], vec![3, 0, 4], vec![8, 6, 7]];
+    let mut test_puzzle = init_puz(rows);
+
+    test_puzzle = test_puzzle.clone().move_zero(Direction::Left);
+    let rows = vec![vec![1, 5, 2], vec![0, 3, 4], vec![8, 6, 7]];
+    let current_puzzle = init_puz(rows);
+    assert!(current_puzzle.equals(test_puzzle.clone()));
+}
+#[test]
+fn move_test_right() {
+    let rows = vec![vec![1, 5, 2], vec![3, 0, 4], vec![8, 6, 7]];
+    let mut test_puzzle = init_puz(rows);
+
+    test_puzzle = test_puzzle.clone().move_zero(Direction::Left);
+    let rows = vec![vec![1, 5, 2], vec![3, 4, 0], vec![8, 6, 7]];
+    let current_puzzle = init_puz(rows);
+    assert!(current_puzzle.equals(test_puzzle.clone()));
+}
 
 #[test]
 fn getmove_test() {

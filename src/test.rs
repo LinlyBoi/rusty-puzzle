@@ -16,7 +16,7 @@ fn move_test_down() {
     test_puzzle = test_puzzle.clone().move_zero(Direction::Down);
     let rows = vec![vec![1, 5, 2], vec![3, 6, 4], vec![8, 0, 7]];
     let current_puzzle = init_puz(rows);
-    assert!(current_puzzle.equals(test_puzzle.clone()));
+    assert!(current_puzzle.equals(test_puzzle));
 }
 
 #[test]
@@ -27,7 +27,7 @@ fn move_test_up() {
     test_puzzle = test_puzzle.clone().move_zero(Direction::Up);
     let rows = vec![vec![1, 0, 2], vec![3, 5, 4], vec![8, 6, 7]];
     let current_puzzle = init_puz(rows);
-    assert!(current_puzzle.equals(test_puzzle.clone()));
+    assert!(current_puzzle.equals(test_puzzle));
 }
 #[test]
 fn move_test_left() {
@@ -37,7 +37,7 @@ fn move_test_left() {
     test_puzzle = test_puzzle.clone().move_zero(Direction::Left);
     let rows = vec![vec![1, 5, 2], vec![0, 3, 4], vec![8, 6, 7]];
     let current_puzzle = init_puz(rows);
-    assert!(current_puzzle.equals(test_puzzle.clone()));
+    assert!(current_puzzle.equals(test_puzzle));
 }
 #[test]
 fn move_test_right() {
@@ -47,7 +47,7 @@ fn move_test_right() {
     test_puzzle = test_puzzle.clone().move_zero(Direction::Right);
     let rows = vec![vec![1, 5, 2], vec![3, 4, 0], vec![8, 6, 7]];
     let current_puzzle = init_puz(rows);
-    assert!(current_puzzle.equals(test_puzzle.clone()));
+    assert!(current_puzzle.equals(test_puzzle));
 }
 
 #[test]
@@ -164,7 +164,7 @@ fn getchildren_test() {
 fn checkgoal() {
     let rows = vec![vec![0, 1, 2], vec![3, 4, 5], vec![6, 7, 8]];
     let goal = init_puz(rows);
-    assert_eq!(None, goal.clone().parent);
+    assert_eq!(None, goal.parent);
     assert!(goal.checkgoal())
 }
 #[test]
@@ -195,6 +195,6 @@ fn twodee() {
 #[test]
 fn solution_creation() {
     let rows = vec![vec![0, 1, 2], vec![3, 4, 5], vec![6, 7, 8]];
-    let p1 = init_puz(rows.clone());
+    let p1 = init_puz(rows);
     _ = Solution::from_goal(p1, vec![], HashSet::new(), 0)
 }

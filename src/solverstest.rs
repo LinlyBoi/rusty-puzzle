@@ -1,6 +1,6 @@
 use std::collections::{HashSet, VecDeque};
 
-use priority_queue::{DoublePriorityQueue, PriorityQueue};
+use priority_queue::DoublePriorityQueue;
 
 use crate::{
     init_puz,
@@ -8,21 +8,21 @@ use crate::{
     Puzzle,
 };
 
-// #[test]
-// fn dfs() {
-//     let rows = vec![vec![1, 4, 2], vec![3, 5, 8], vec![6, 7, 0]];
-//     let test_puzzle = init_puz(rows);
-//     let mut vec_q: VecDeque<Puzzle> = VecDeque::new();
-//     vec_q.push_back(test_puzzle.clone());
-//     let solly = solve_dfs(vec_q, HashSet::new()).expect("Nope");
-//     assert!(solly.get_path().first().expect("??").clone().checkgoal())
-// }
+#[test]
+fn dfs() {
+    let rows = vec![vec![1, 4, 2], vec![3, 5, 8], vec![6, 7, 0]];
+    let test_puzzle = init_puz(rows);
+    let mut vec_q: VecDeque<Puzzle> = VecDeque::new();
+    vec_q.push_back(test_puzzle.clone());
+    let solly = solve_dfs(vec_q, HashSet::new()).expect("Nope");
+    assert!(solly.get_path().first().expect("??").clone().checkgoal())
+}
 #[test]
 fn bfs() {
     let rows = vec![vec![1, 4, 2], vec![3, 5, 8], vec![6, 7, 0]];
     let test_puzzle = init_puz(rows);
     let mut vec_q: VecDeque<Puzzle> = VecDeque::new();
-    vec_q.push_back(test_puzzle.clone());
+    vec_q.push_back(test_puzzle);
     let solly = solve_bfs(vec_q, HashSet::new()).expect("Nope");
     assert!(solly.get_path().first().expect("??").clone().checkgoal())
 }
@@ -32,7 +32,6 @@ fn aystar_mann() {
     let rows = vec![vec![1, 4, 2], vec![3, 0, 8], vec![6, 5, 7]];
     let test_puzzle = init_puz(rows).calc_mann();
     let init_h: usize = test_puzzle
-        .clone()
         .score
         .elements_row_major_iter()
         .sum::<u8>()
@@ -47,7 +46,6 @@ fn aystar_eucl() {
     let rows = vec![vec![1, 4, 2], vec![3, 5, 8], vec![6, 7, 0]];
     let test_puzzle = init_puz(rows).calc_mann();
     let init_h: usize = test_puzzle
-        .clone()
         .score
         .elements_row_major_iter()
         .sum::<u8>()

@@ -1,10 +1,10 @@
-use std::collections::{HashSet, VecDeque};
+use std::collections::HashSet;
 
 use array2d::Array2D;
 use heuristic::Heust;
-use priority_queue::{DoublePriorityQueue, PriorityQueue};
+use priority_queue::DoublePriorityQueue;
 
-use crate::solvers::{solve_aystar, solve_bfs, solve_dfs};
+use crate::solvers::solve_aystar;
 
 mod heuristic;
 mod solvers;
@@ -24,7 +24,6 @@ fn main() {
     // let solly = solve_bfs(vec_q, HashSet::new()).expect("BFS is sucks");
     let test_puzzle = init_puz(rows).calc_mann();
     let init_h: usize = test_puzzle
-        .clone()
         .score
         .elements_row_major_iter()
         .sum::<u8>()
@@ -181,10 +180,6 @@ pub fn init_puz(rows: Vec<Vec<u8>>) -> Puzzle {
     }
 }
 pub fn find_index(twod: Array2D<u8>, value: u8) -> Option<(usize, usize)> {
-    for index in twod.indices_row_major() {
-        if twod[(index)] == value {
-            return Some(index);
-        }
-    }
-    None
+    twod.indices_row_major()
+        .find(|&index| twod[(index)] == value)
 }

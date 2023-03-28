@@ -1,9 +1,9 @@
 use std::collections::{HashSet, VecDeque};
 
-use array2d::Array2D;
-use priority_queue::{DoublePriorityQueue, PriorityQueue};
 
-use crate::{find_index, Heust, Puzzle};
+use priority_queue::{DoublePriorityQueue};
+
+use crate::{Heust, Puzzle};
 
 #[derive(Debug, Clone)]
 pub struct Solution {
@@ -18,11 +18,11 @@ impl Solution {
         explored: HashSet<Puzzle>,
         cost: usize,
     ) -> Solution {
-        match goal.clone().parent {
+        match goal.parent {
             None => Solution {
                 goal_path: path.clone(),
                 cost,
-                explored: explored.clone(),
+                explored,
             },
             Some(puzzle) => {
                 path.push(*puzzle.clone());
@@ -51,7 +51,7 @@ pub fn solve_dfs(
             match node.clone().checkgoal() {
                 true => Some(Solution::from_goal(node.clone(), vec![node], explored, 0)),
                 false => {
-                    let parent = node.clone().getchildren(Heust::NoH);
+                    let parent = node.getchildren(Heust::NoH);
                     for child in parent.neighbours {
                         let mut dup = false;
                         for node in explored.clone() {
@@ -82,7 +82,7 @@ pub fn solve_bfs(
             match node.clone().checkgoal() {
                 true => Some(Solution::from_goal(node.clone(), vec![node], explored, 0)),
                 false => {
-                    let parent = node.clone().getchildren(Heust::NoH);
+                    let parent = node.getchildren(Heust::NoH);
                     for child in parent.neighbours {
                         let mut dup = false;
                         for node in explored.clone() {
@@ -120,7 +120,7 @@ pub fn solve_aystar(
                     0,
                 )),
                 false => {
-                    let parent = node.clone().0.getchildren(heut.clone());
+                    let parent = node.0.getchildren(heut.clone());
                     for mut child in parent.neighbours {
                         let mut dup = false;
                         match heut {

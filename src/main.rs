@@ -98,6 +98,21 @@ impl Puzzle {
             temp_child.parent = Some(Box::new(self.clone()));
             children.push(temp_child);
         }
+        match h {
+            Heust::NoH => {}
+            Heust::Mann => {
+                let mut mann_children: Vec<Puzzle> = vec![];
+                for child in children.clone() {
+                    mann_children.push(child.calc_mann());
+                }
+            }
+            Heust::Eucl => {
+                let mut eucl_children: Vec<Puzzle> = vec![];
+                for child in children.clone() {
+                    eucl_children.push(child.calc_eucl());
+                }
+            }
+        }
         self.neighbours = children;
         self
     }

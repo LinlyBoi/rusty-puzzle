@@ -1,6 +1,7 @@
 use std::collections::{HashSet, VecDeque};
 
 use array2d::Array2D;
+use priority_queue::{DoublePriorityQueue, PriorityQueue};
 
 use crate::{find_index, Heust, Puzzle};
 
@@ -34,6 +35,9 @@ impl Solution {
     }
     pub fn get_cost(self) -> usize {
         self.cost
+    }
+    pub fn get_explored(self) -> HashSet<Puzzle> {
+        self.explored
     }
 }
 pub fn solve_dfs(
@@ -94,6 +98,53 @@ pub fn solve_bfs(
                         }
                     }
                     solve_bfs(frontier, explored)
+                }
+            }
+        }
+    }
+}
+pub fn solve_aystar(
+    mut frontier: DoublePriorityQueue<Puzzle, usize>,
+    mut explored: HashSet<Puzzle>,
+    heut: Heust,
+) -> Option<Solution> {
+    match frontier.pop_min() {
+        None => None,
+        Some(node) => {
+            explored.insert(node.clone().0);
+            match node.clone().0.checkgoal() {
+                true => Some(Solution::from_goal(
+                    node.clone().0,
+                    vec![node.0],
+                    explored,
+                    0,
+                )),
+                false => {
+                    let parent = node.clone().0.getchildren(heut.clone());
+                    for mut child in parent.neighbours {
+                        let mut dup = false;
+                        match heut {
+                            Heust::Mann => child = child.calc_mann(),
+                            Heust::Eucl => child = child.calc_eucl(),
+                            Heust::NoH => {}
+                        }
+                        for node in explored.clone() {
+                            //Iterate over explored to prevent
+                            //duplicate states
+                            if child.clone().equals(node) {
+                                dup = true;
+                                break;
+                            }
+                        }
+                        if !dup {
+                            let h: usize =
+                                child.clone().score.elements_row_major_iter().sum::<u8>() as usize;
+                            child.cost = parent.cost + 1;
+                            frontier.push(child.clone(), h + child.cost);
+                            dbg!(child.state, h, child.cost);
+                        }
+                    }
+                    solve_aystar(frontier, explored, heut)
                 }
             }
         }

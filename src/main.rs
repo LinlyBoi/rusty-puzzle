@@ -1,9 +1,11 @@
 use std::collections::{HashSet, VecDeque};
 
 use array2d::Array2D;
+use heuristic::Heust;
 
 use crate::solvers::{solve_bfs, solve_dfs};
 
+mod heuristic;
 mod solvers;
 #[cfg(test)]
 mod solverstest;
@@ -16,12 +18,12 @@ fn main() {
     let test_puzzle = init_puz(rows);
     let mut vec_q: VecDeque<Puzzle> = VecDeque::new();
     vec_q.push_back(test_puzzle.clone());
-    let solly = solve_dfs(vec_q, HashSet::new()).expect("Nope");
-    // let solly = solve_bfs(vec_q, HashSet::new()).expect("BFS is sucks");
+    // let solly = solve_dfs(vec_q, HashSet::new()).expect("Nope");
+    let solly = solve_bfs(vec_q, HashSet::new()).expect("BFS is sucks");
     for step in solly.clone().get_path() {
         dbg!("funny path:", step.state);
     }
-    dbg!(solly.get_cost());
+    dbg!(solly.clone().get_cost());
 }
 #[derive(Debug, Clone, Hash, Eq, PartialEq)]
 pub struct Puzzle {
@@ -32,19 +34,32 @@ pub struct Puzzle {
     score: Array2D<u8>,
 }
 impl Puzzle {
-    fn getchildren(mut self, h: Heust) -> Self {
-        let moves = self.clone().getmoves();
-        let mut children: Vec<Puzzle> = vec![];
-        for direction in moves {
-            let mut temp_child: Puzzle;
-            temp_child = self.clone().move_zero(direction);
-            temp_child.parent = Some(Box::new(self.clone()));
-            children.push(temp_child);
-        }
-        self.neighbours = children;
-        self
+    fn getzero(self) -> (usize, usize) {
+        self.zeropos
     }
 
+    fn getmoves(self) -> Vec<Direction> {
+        let mut moves: Vec<Direction> = vec![];
+        match self.zeropos.0 {
+            0 => moves.push(Direction::Down),
+            1 => {
+                moves.push(Direction::Down);
+                moves.push(Direction::Up);
+            }
+            2 => moves.push(Direction::Up),
+            _ => {}
+        }
+        match self.zeropos.1 {
+            0 => moves.push(Direction::Right),
+            1 => {
+                moves.push(Direction::Right);
+                moves.push(Direction::Left);
+            }
+            2 => moves.push(Direction::Left),
+            _ => {}
+        }
+        moves
+    }
     fn move_zero(mut self, dir: Direction) -> Self {
         let old_state = self.clone().state;
         let (x, y) = self.clone().getzero();
@@ -74,33 +89,19 @@ impl Puzzle {
         self.zeropos = (zx, zy);
         self
     }
-
-    fn getzero(self) -> (usize, usize) {
-        self.zeropos
+    fn getchildren(mut self, h: Heust) -> Self {
+        let moves = self.clone().getmoves();
+        let mut children: Vec<Puzzle> = vec![];
+        for direction in moves {
+            let mut temp_child: Puzzle;
+            temp_child = self.clone().move_zero(direction);
+            temp_child.parent = Some(Box::new(self.clone()));
+            children.push(temp_child);
+        }
+        self.neighbours = children;
+        self
     }
 
-    fn getmoves(self) -> Vec<Direction> {
-        let mut moves: Vec<Direction> = vec![];
-        match self.zeropos.0 {
-            0 => moves.push(Direction::Down),
-            1 => {
-                moves.push(Direction::Down);
-                moves.push(Direction::Up);
-            }
-            2 => moves.push(Direction::Up),
-            _ => {}
-        }
-        match self.zeropos.1 {
-            0 => moves.push(Direction::Right),
-            1 => {
-                moves.push(Direction::Right);
-                moves.push(Direction::Left);
-            }
-            2 => moves.push(Direction::Left),
-            _ => {}
-        }
-        moves
-    }
     fn checkgoal(self) -> bool {
         //hard coded for now
         let rows = vec![vec![0, 1, 2], vec![3, 4, 5], vec![6, 7, 8]];
@@ -132,11 +133,6 @@ enum Direction {
     Down,
     Left,
     Right,
-}
-enum Heust {
-    Mann,
-    Eucl,
-    NoH,
 }
 
 pub fn init_puz(rows: Vec<Vec<u8>>) -> Puzzle {

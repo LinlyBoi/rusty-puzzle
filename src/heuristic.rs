@@ -1,7 +1,7 @@
 use array2d::Array2D;
 
 use crate::{find_index, Puzzle};
-
+#[derive(Clone)]
 pub enum Heust {
     Mann,
     Eucl,

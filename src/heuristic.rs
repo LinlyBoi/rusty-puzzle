@@ -23,13 +23,17 @@ pub fn eucl_heust((curr_x, curr_y): (usize, usize), value: u8) -> usize {
 impl Puzzle {
     pub fn calc_mann(mut self) -> Self {
         for index in self.state.indices_row_major() {
-            self.score[(index)] = mann_heust(index, self.state[(index)]) as u8;
+            if (self.state[(index)] != 0) {
+                self.score[(index)] = mann_heust(index, self.state[(index)]) as u8;
+            }
         }
         self
     }
     pub fn calc_eucl(mut self) -> Self {
         for index in self.state.indices_row_major() {
-            self.score[(index)] = eucl_heust(index, self.state[(index)]) as u8;
+            if (self.state[(index)] != 0) {
+                self.score[(index)] = eucl_heust(index, self.state[(index)]) as u8;
+            }
         }
         self
     }

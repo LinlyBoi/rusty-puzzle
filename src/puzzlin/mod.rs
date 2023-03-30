@@ -1,5 +1,7 @@
 use array2d::Array2D;
 use heuristic::{eucl_heust, mann_heust, Heust};
+
+use self::solvers::Solution;
 pub mod heuristic;
 pub mod solvers;
 #[cfg(test)]
@@ -15,6 +17,19 @@ pub struct Puzzle {
     score: Array2D<u8>,
     cost: usize,
 }
+impl Default for Puzzle {
+    fn default() -> Self {
+        Puzzle {
+            neighbours: vec![],
+            parent: None,
+            state: Array2D::from_rows(&vec![vec![0, 1, 2], vec![3, 4, 5], vec![6, 7, 8]])
+                .expect("WHY"),
+            score: Array2D::filled_with(0, 3, 3),
+            zeropos: (0, 0),
+            cost: 0,
+        }
+    }
+}
 
 #[derive(Debug)]
 pub enum Direction {
@@ -25,6 +40,18 @@ pub enum Direction {
 }
 
 impl Puzzle {
+    pub fn new(rows: Vec<Vec<u8>>) -> Self {
+        let test_state: Array2D<u8> = Array2D::from_rows(&rows).expect("no");
+        let (zx, zy): (usize, usize) = find_index(test_state.clone(), 0).expect("OUT OF BOUNDS");
+        Puzzle {
+            neighbours: vec![],
+            parent: None,
+            state: test_state,
+            zeropos: (zx, zy),
+            score: Array2D::filled_with(0, 3, 3),
+            cost: 0,
+        }
+    }
     pub fn getzero(self) -> (usize, usize) {
         self.zeropos
     }

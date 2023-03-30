@@ -11,7 +11,8 @@ use crate::puzzlin::{
 
 #[test]
 fn dfs() {
-    let rows = vec![vec![1, 4, 2], vec![3, 5, 8], vec![6, 7, 0]];
+    // let rows = vec![vec![1, 4, 2], vec![3, 5, 8], vec![6, 7, 0]];
+    let rows = vec![vec![1, 2, 0], vec![3, 4, 5], vec![6, 7, 8]];
     let test_puzzle = init_puz(rows);
     let mut vec_q: VecDeque<Puzzle> = VecDeque::new();
     vec_q.push_back(test_puzzle.clone());
@@ -44,7 +45,8 @@ fn aystar_mann() {
 }
 #[test]
 fn aystar_eucl() {
-    let rows = vec![vec![1, 4, 2], vec![3, 5, 8], vec![6, 7, 0]];
+    // let rows = vec![vec![1, 4, 2], vec![3, 5, 8], vec![6, 7, 0]];
+    let rows = vec![vec![1, 2, 0], vec![3, 4, 5], vec![6, 7, 8]];
     let test_puzzle = init_puz(rows).calc_mann();
     let init_h: usize = test_puzzle
         .score

@@ -6,10 +6,20 @@ use super::{Heust, Puzzle};
 
 #[derive(Debug, Clone)]
 pub struct Solution {
-    goal_path: Vec<Puzzle>,
+    pub goal_path: Vec<Puzzle>,
     cost: usize,
     explored: HashSet<Puzzle>,
 }
+impl Default for Solution {
+    fn default() -> Self {
+        Solution {
+            goal_path: vec![],
+            cost: 0,
+            explored: HashSet::new(),
+        }
+    }
+}
+
 impl Solution {
     pub fn from_goal(
         goal: Puzzle,
@@ -140,7 +150,7 @@ pub fn solve_aystar(
                                 child.clone().score.elements_row_major_iter().sum::<u8>() as usize;
                             child.cost = parent.cost + 1;
                             frontier.push(child.clone(), h + child.cost);
-                            dbg!(child.state, h, child.cost);
+                            // dbg!(child.state, h, child.cost);
                         }
                     }
                     solve_aystar(frontier, explored, heut)

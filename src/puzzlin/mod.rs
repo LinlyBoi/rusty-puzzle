@@ -1,20 +1,45 @@
+use crate::heuristic::Heust;
 use array2d::Array2D;
-mod heuristic;
+use heuristic::{eucl_heust, mann_heust};
+pub mod heuristic;
+#[cfg(test)]
+mod solverstest;
+#[cfg(test)]
+mod test;
 #[derive(Debug, Clone, Hash, Eq, PartialEq)]
-pub(crate) struct Puzzle {
+pub struct Puzzle {
     state: Array2D<u8>,
-    neighbours: Vec<Puzzle>,
-    parent: Option<Box<Puzzle>>,
+    pub neighbours: Vec<Puzzle>,
+    pub parent: Option<Box<Puzzle>>,
     zeropos: (usize, usize),
     score: Array2D<u8>,
     cost: usize,
 }
+
+#[derive(Debug)]
+pub enum Direction {
+    Up,
+    Down,
+    Left,
+    Right,
+}
+
 impl Puzzle {
-    fn getzero(self) -> (usize, usize) {
+    pub fn getzero(self) -> (usize, usize) {
         self.zeropos
     }
+    pub fn getstate(self) -> Array2D<u8> {
+        self.state
+    }
+    pub fn getscore(self) -> Array2D<u8> {
+        self.score
+    }
 
-    fn getmoves(self) -> Vec<Direction> {
+    pub fn getcost(self) -> usize {
+        self.cost
+    }
+
+    pub fn getmoves(self) -> Vec<Direction> {
         let mut moves: Vec<Direction> = vec![];
         match self.zeropos.0 {
             0 => moves.push(Direction::Down),
@@ -65,7 +90,7 @@ impl Puzzle {
         self.zeropos = (zx, zy);
         self
     }
-    fn getchildren(mut self, h: Heust) -> Self {
+    pub fn getchildren(mut self, h: Heust) -> Self {
         let moves = self.clone().getmoves();
         let mut children: Vec<Puzzle> = vec![];
         for direction in moves {
@@ -95,7 +120,7 @@ impl Puzzle {
         self
     }
 
-    fn checkgoal(self) -> bool {
+    pub fn checkgoal(self) -> bool {
         //hard coded for now
         let rows = vec![vec![0, 1, 2], vec![3, 4, 5], vec![6, 7, 8]];
         let goal: Array2D<u8> = Array2D::from_rows(&rows).expect("no");
@@ -107,7 +132,7 @@ impl Puzzle {
             .count();
         matching == goal.row_len() * goal.column_len()
     }
-    fn equals(self, other: Puzzle) -> bool {
+    pub fn equals(self, other: Puzzle) -> bool {
         let other_state = other.state;
         let matching = other_state
             .as_row_major()
@@ -119,13 +144,24 @@ impl Puzzle {
         // dbg!(self.clone());
         matching == other_state.row_len() * other_state.column_len()
     }
-}
-#[derive(Debug)]
-enum Direction {
-    Up,
-    Down,
-    Left,
-    Right,
+
+    pub fn calc_mann(mut self) -> Self {
+        for index in self.state.indices_row_major() {
+            if self.state[(index)] != 0 {
+                // empty tile is not misplaced
+                self.score[(index)] = mann_heust(index, self.state[(index)]) as u8;
+            }
+        }
+        self
+    }
+    pub fn calc_eucl(mut self) -> Self {
+        for index in self.state.indices_row_major() {
+            if self.state[(index)] != 0 {
+                self.score[(index)] = eucl_heust(index, self.state[(index)]) as u8;
+            }
+        }
+        self
+    }
 }
 
 pub fn init_puz(rows: Vec<Vec<u8>>) -> Puzzle {
@@ -140,6 +176,7 @@ pub fn init_puz(rows: Vec<Vec<u8>>) -> Puzzle {
         cost: 0,
     }
 }
+
 pub fn find_index(twod: Array2D<u8>, value: u8) -> Option<(usize, usize)> {
     twod.indices_row_major()
         .find(|&index| twod[(index)] == value)

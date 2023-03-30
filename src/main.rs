@@ -1,152 +1,35 @@
-use std::collections::{HashSet, VecDeque};
+use std::collections::HashSet;
 
-use array2d::Array2D;
+use priority_queue::DoublePriorityQueue;
 
-use crate::solvers::{solve_bfs, solve_dfs};
+use rusting_puzzle::puzzlin::{heuristic::Heust, init_puz, solvers::solve_aystar, Puzzle};
 
-mod solvers;
-#[cfg(test)]
-mod solverstest;
-#[cfg(test)]
-mod test;
-
-fn main() {
-    println!("Hello, world!");
-    // let rows = vec![vec![5, 2, 8], vec![4, 1, 7], vec![0, 3, 6]];
-    // let rows = vec![vec![1, 7, 2], vec![0, 4, 3], vec![8, 6, 5]];
-    let rows = vec![vec![1, 2, 0], vec![3, 4, 5], vec![6, 7, 8]];
-    let test_puzzle = init_puz(rows);
-    let mut vec_q: VecDeque<Puzzle> = VecDeque::new();
-    vec_q.push_back(test_puzzle.clone());
+fn main() -> eframe::Result<()> {
+    let rows = vec![vec![1, 4, 2], vec![3, 0, 8], vec![6, 5, 7]];
+    // let test_puzzle = init_puz(rows);
+    // let mut vec_q: VecDeque<Puzzle> = VecDeque::new();
+    // vec_q.push_back(test_puzzle.clone());
     // let solly = solve_dfs(vec_q, HashSet::new()).expect("Nope");
-    let solly = solve_bfs(vec_q, HashSet::new()).expect("Nope");
-    dbg!(solly);
-}
-#[derive(Debug, Clone, Hash, Eq, PartialEq)]
-pub struct Puzzle {
-    state: Array2D<u8>,
-    neighbours: Vec<Puzzle>,
-    parent: Option<Box<Puzzle>>,
-    zeropos: (usize, usize),
-}
-impl Puzzle {
-    fn getchildren(mut self) -> Self {
-        let mut children: Vec<Puzzle> = vec![];
-        let moves = self.clone().getmoves();
-        for direction in moves {
-            let mut temp_child: Puzzle;
-            temp_child = self.clone().move_zero(direction);
-            temp_child.parent = Some(Box::new(self.clone()));
-            children.push(temp_child);
-        }
-        self.neighbours = children;
-        self
-    }
+    // let solly = solve_bfs(vec_q, HashSet::new()).expect("BFS is sucks");
+    let test_puzzle = init_puz(rows).calc_mann();
+    let init_h: usize = test_puzzle
+        .clone()
+        .getscore()
+        .elements_row_major_iter()
+        .sum::<u8>()
+        .into();
+    let mut pq: DoublePriorityQueue<Puzzle, usize> = DoublePriorityQueue::new();
+    pq.push(test_puzzle, init_h);
+    let solly = solve_aystar(pq, HashSet::new(), Heust::Mann).expect("Nope");
 
-    fn move_zero(mut self, dir: Direction) -> Self {
-        let old_state = self.clone().state;
-        let (x, y) = self.clone().getzero();
-        let (zx, zy): (usize, usize);
-        let temp_value: u8;
+    // Log to stdout (if you run with `RUST_LOG=debug`).
+    tracing_subscriber::fmt::init();
 
-        match dir {
-            Direction::Up => {
-                temp_value = old_state[(x - 1, y)];
-                (zx, zy) = (x - 1, y);
-            }
-            Direction::Down => {
-                temp_value = old_state[(x + 1, y)];
-                (zx, zy) = (x + 1, y);
-            }
-            Direction::Left => {
-                temp_value = old_state[(x, y - 1)];
-                (zx, zy) = (x, y - 1);
-            }
-            Direction::Right => {
-                temp_value = old_state[(x, y + 1)];
-                (zx, zy) = (x, y + 1);
-            }
-        }
-        self.state[(x, y)] = temp_value;
-        self.state[(zx, zy)] = 0;
-        self.zeropos = (zx, zy);
-        self
-    }
-
-    fn getzero(self) -> (usize, usize) {
-        self.zeropos
-    }
-
-    fn getmoves(self) -> Vec<Direction> {
-        let mut moves: Vec<Direction> = vec![];
-        match self.zeropos.0 {
-            0 => moves.push(Direction::Down),
-            1 => {
-                moves.push(Direction::Up);
-                moves.push(Direction::Down);
-            }
-            2 => moves.push(Direction::Up),
-            _ => {}
-        }
-        match self.zeropos.1 {
-            0 => moves.push(Direction::Right),
-            1 => {
-                moves.push(Direction::Left);
-                moves.push(Direction::Right);
-            }
-            2 => moves.push(Direction::Left),
-            _ => {}
-        }
-        moves
-    }
-    fn checkgoal(self) -> bool {
-        //hard coded for now
-        let rows = vec![vec![0, 1, 2], vec![3, 4, 5], vec![6, 7, 8]];
-        let goal: Array2D<u8> = Array2D::from_rows(&rows).expect("no");
-        let matching = goal
-            .as_row_major()
-            .iter()
-            .zip(&self.state.as_row_major())
-            .filter(|&(a, b)| a == b)
-            .count();
-        matching == goal.row_len() * goal.column_len()
-    }
-    fn equals(self, other: Puzzle) -> bool {
-        let other_state = other.state;
-        let matching = other_state
-            .as_row_major()
-            .iter()
-            .zip(&self.state.as_row_major())
-            .filter(|&(a, b)| a == b)
-            .count();
-        // dbg!(other_state.clone());
-        // dbg!(self.clone());
-        matching == other_state.row_len() * other_state.column_len()
-    }
-}
-#[derive(Debug)]
-enum Direction {
-    Up,
-    Down,
-    Left,
-    Right,
-}
-
-pub fn init_puz(rows: Vec<Vec<u8>>) -> Puzzle {
-    let test_state: Array2D<u8> = Array2D::from_rows(&rows).expect("no");
-    let (zx, zy): (usize, usize) = find_index(test_state.clone(), 0).expect("OUT OF BOUNDS");
-    Puzzle {
-        neighbours: vec![],
-        parent: None,
-        state: test_state,
-        zeropos: (zx, zy),
-    }
-}
-pub fn find_index(twod: Array2D<u8>, value: u8) -> Option<(usize, usize)> {
-    for index in twod.indices_row_major() {
-        if twod[(index)] == value {
-            return Some(index);
-        }
-    }
-    None
+    let native_options = eframe::NativeOptions::default();
+    eframe::run_native(
+        "Rusty Puzzle Solver",
+        native_options,
+        Box::new(|cc| Box::new(rusting_puzzle::RustyPuzzle::new(cc))),
+    )
+    // let rows = vec![vec![1, 4, 2], vec![3, 5, 8], vec![6, 7, 0]];
 }

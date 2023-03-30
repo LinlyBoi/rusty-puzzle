@@ -2,7 +2,9 @@ use std::collections::HashSet;
 
 use array2d::Array2D;
 
-use crate::{find_index, init_puz, solvers::Solution, Direction};
+use crate::puzzlin::{find_index, heuristic::Heust, init_puz, Direction};
+
+use super::solvers::Solution;
 
 #[test]
 fn move_test_down() {
@@ -16,7 +18,7 @@ fn move_test_down() {
     test_puzzle = test_puzzle.clone().move_zero(Direction::Down);
     let rows = vec![vec![1, 5, 2], vec![3, 6, 4], vec![8, 0, 7]];
     let current_puzzle = init_puz(rows);
-    assert!(current_puzzle.equals(test_puzzle.clone()));
+    assert!(current_puzzle.equals(test_puzzle));
 }
 
 #[test]
@@ -27,7 +29,27 @@ fn move_test_up() {
     test_puzzle = test_puzzle.clone().move_zero(Direction::Up);
     let rows = vec![vec![1, 0, 2], vec![3, 5, 4], vec![8, 6, 7]];
     let current_puzzle = init_puz(rows);
-    assert!(current_puzzle.equals(test_puzzle.clone()));
+    assert!(current_puzzle.equals(test_puzzle));
+}
+#[test]
+fn move_test_left() {
+    let rows = vec![vec![1, 5, 2], vec![3, 0, 4], vec![8, 6, 7]];
+    let mut test_puzzle = init_puz(rows);
+
+    test_puzzle = test_puzzle.clone().move_zero(Direction::Left);
+    let rows = vec![vec![1, 5, 2], vec![0, 3, 4], vec![8, 6, 7]];
+    let current_puzzle = init_puz(rows);
+    assert!(current_puzzle.equals(test_puzzle));
+}
+#[test]
+fn move_test_right() {
+    let rows = vec![vec![1, 5, 2], vec![3, 0, 4], vec![8, 6, 7]];
+    let mut test_puzzle = init_puz(rows);
+
+    test_puzzle = test_puzzle.clone().move_zero(Direction::Right);
+    let rows = vec![vec![1, 5, 2], vec![3, 4, 0], vec![8, 6, 7]];
+    let current_puzzle = init_puz(rows);
+    assert!(current_puzzle.equals(test_puzzle));
 }
 
 #[test]
@@ -82,7 +104,7 @@ fn getmove_test() {
 fn getchildren_test() {
     let rows = vec![vec![0, 5, 2], vec![3, 1, 4], vec![8, 6, 7]];
     let mut test_puzzle = init_puz(rows);
-    test_puzzle = test_puzzle.clone().getchildren();
+    test_puzzle = test_puzzle.clone().getchildren(Heust::NoH);
 
     let test_rows = vec![vec![3, 5, 2], vec![0, 1, 4], vec![8, 6, 7]];
     let test2_puzzle = init_puz(test_rows);
@@ -102,49 +124,49 @@ fn getchildren_test() {
     assert_eq!(2, test_puzzle.neighbours.len());
     let rows = vec![vec![1, 0, 2], vec![3, 5, 4], vec![8, 6, 7]];
     let test_puzzle = init_puz(rows);
-    let children = test_puzzle.getchildren();
+    let children = test_puzzle.getchildren(Heust::NoH);
     assert_eq!(3, children.neighbours.len());
 
     let rows = vec![vec![2, 5, 0], vec![3, 1, 4], vec![8, 6, 7]];
     let test_puzzle = init_puz(rows);
-    let children = test_puzzle.getchildren();
+    let children = test_puzzle.getchildren(Heust::NoH);
     assert_eq!(2, children.neighbours.len());
 
     let rows = vec![vec![1, 5, 2], vec![0, 3, 4], vec![8, 6, 7]];
     let test_puzzle = init_puz(rows);
-    let children = test_puzzle.getchildren();
+    let children = test_puzzle.getchildren(Heust::NoH);
     assert_eq!(3, children.neighbours.len());
 
     let rows = vec![vec![1, 5, 2], vec![3, 0, 4], vec![8, 6, 7]];
     let test_puzzle = init_puz(rows);
-    let children = test_puzzle.getchildren();
+    let children = test_puzzle.getchildren(Heust::NoH);
     assert_eq!(4, children.neighbours.len());
 
     let rows = vec![vec![1, 5, 2], vec![3, 4, 0], vec![8, 6, 7]];
     let test_puzzle = init_puz(rows);
-    let children = test_puzzle.getchildren();
+    let children = test_puzzle.getchildren(Heust::NoH);
     assert_eq!(3, children.neighbours.len());
 
     let rows = vec![vec![1, 5, 2], vec![3, 4, 8], vec![0, 6, 7]];
     let test_puzzle = init_puz(rows);
-    let children = test_puzzle.getchildren();
+    let children = test_puzzle.getchildren(Heust::NoH);
     assert_eq!(2, children.neighbours.len());
 
     let rows = vec![vec![1, 5, 2], vec![3, 4, 8], vec![6, 0, 7]];
     let test_puzzle = init_puz(rows);
-    let children = test_puzzle.getchildren();
+    let children = test_puzzle.getchildren(Heust::NoH);
     assert_eq!(3, children.neighbours.len());
 
     let rows = vec![vec![1, 5, 2], vec![3, 4, 8], vec![6, 7, 0]];
     let test_puzzle = init_puz(rows);
-    let children = test_puzzle.getchildren();
+    let children = test_puzzle.getchildren(Heust::NoH);
     assert_eq!(2, children.neighbours.len());
 }
 #[test]
 fn checkgoal() {
     let rows = vec![vec![0, 1, 2], vec![3, 4, 5], vec![6, 7, 8]];
     let goal = init_puz(rows);
-    assert_eq!(None, goal.clone().parent);
+    assert_eq!(None, goal.parent);
     assert!(goal.checkgoal())
 }
 #[test]
@@ -175,6 +197,6 @@ fn twodee() {
 #[test]
 fn solution_creation() {
     let rows = vec![vec![0, 1, 2], vec![3, 4, 5], vec![6, 7, 8]];
-    let p1 = init_puz(rows.clone());
-    _ = Solution::from_goal(p1, HashSet::new(), 0)
+    let p1 = init_puz(rows);
+    _ = Solution::from_goal(p1, vec![], HashSet::new(), 0)
 }

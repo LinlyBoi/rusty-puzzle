@@ -32,7 +32,7 @@ impl Puzzle {
         self.state
     }
     pub fn getscore(self) -> Array2D<u8> {
-        self.clone().score
+        self.score
     }
 
     pub fn getcost(self) -> usize {

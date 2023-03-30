@@ -15,6 +15,7 @@ fn main() {
     // let solly = solve_bfs(vec_q, HashSet::new()).expect("BFS is sucks");
     let test_puzzle = init_puz(rows).calc_mann();
     let init_h: usize = test_puzzle
+        .clone()
         .getscore()
         .elements_row_major_iter()
         .sum::<u8>()

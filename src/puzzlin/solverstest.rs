@@ -2,7 +2,8 @@ use std::collections::{HashSet, VecDeque};
 
 use priority_queue::DoublePriorityQueue;
 
-use crate::{
+use crate::puzzlin::{
+    heuristic::Heust,
     init_puz,
     solvers::{solve_aystar, solve_bfs, solve_dfs},
     Puzzle,
@@ -38,7 +39,7 @@ fn aystar_mann() {
         .into();
     let mut pq: DoublePriorityQueue<Puzzle, usize> = DoublePriorityQueue::new();
     pq.push(test_puzzle, init_h);
-    let solly = solve_aystar(pq, HashSet::new(), crate::heuristic::Heust::Mann).expect("Nope");
+    let solly = solve_aystar(pq, HashSet::new(), Heust::Mann).expect("Nope");
     assert!(solly.get_path().first().expect("??").clone().checkgoal())
 }
 #[test]
@@ -52,6 +53,6 @@ fn aystar_eucl() {
         .into();
     let mut pq: DoublePriorityQueue<Puzzle, usize> = DoublePriorityQueue::new();
     pq.push(test_puzzle, init_h);
-    let solly = solve_aystar(pq, HashSet::new(), crate::heuristic::Heust::Eucl).expect("Nope");
+    let solly = solve_aystar(pq, HashSet::new(), Heust::Eucl).expect("Nope");
     assert!(solly.get_path().first().expect("??").clone().checkgoal())
 }

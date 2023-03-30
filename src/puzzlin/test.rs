@@ -2,7 +2,9 @@ use std::collections::HashSet;
 
 use array2d::Array2D;
 
-use crate::{find_index, init_puz, solvers::Solution, Direction, Heust};
+use crate::puzzlin::{find_index, heuristic::Heust, init_puz, Direction};
+
+use super::solvers::Solution;
 
 #[test]
 fn move_test_down() {

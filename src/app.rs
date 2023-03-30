@@ -1,7 +1,6 @@
 use std::{
     collections::{HashSet, VecDeque},
-    thread,
-    time::Duration,
+    time::Instant,
 };
 
 use priority_queue::DoublePriorityQueue;
@@ -30,7 +29,7 @@ pub struct RustyPuzzle {
     solution: Solution,
     #[serde(skip)]
     heut: Heust,
-    time: Duration,
+    time: usize,
 }
 #[derive(Clone)]
 pub enum SearchMethod {
@@ -49,7 +48,7 @@ impl Default for RustyPuzzle {
             solution: Solution::default(),
             search_method: SearchMethod::BFS,
             heut: Heust::Mann,
-            time: Duration::from_secs(0),
+            time: 0,
         }
     }
 }
@@ -102,7 +101,6 @@ impl eframe::App for RustyPuzzle {
         });
 
         egui::SidePanel::left("side_panel").show(ctx, |ui| {
-            ui.heading("Side Panel");
             ui.heading("Algorithm Selection");
             //
             //
@@ -185,15 +183,19 @@ impl eframe::App for RustyPuzzle {
                         SearchMethod::BFS => {
                             let mut frontier = VecDeque::new();
                             frontier.push_back(self.puzzle.clone());
+                            let time = Instant::now();
                             self.solution =
                                 solve_bfs(frontier, HashSet::new()).expect("NO SOLUTION");
+                            self.time = time.elapsed().as_millis() as usize;
                             self.puzzle = self.solution.goal_path.first().expect("A").clone();
                         }
                         SearchMethod::DFS => {
                             let mut frontier = VecDeque::new();
                             frontier.push_back(self.puzzle.clone());
+                            let time = Instant::now();
                             self.solution =
                                 solve_dfs(frontier, HashSet::new()).expect("NO SOLUTION");
+                            self.time = time.elapsed().as_millis() as usize;
                             self.puzzle = self.solution.goal_path.first().expect("A").clone();
                         }
                         SearchMethod::AYSTAR => {
@@ -201,9 +203,11 @@ impl eframe::App for RustyPuzzle {
                                 DoublePriorityQueue::new();
 
                             frontier.push(self.puzzle.clone(), 0);
+                            let time = Instant::now();
                             self.solution =
                                 solve_aystar(frontier, HashSet::new(), self.heut.clone())
                                     .expect("NO SOLUTION");
+                            self.time = time.elapsed().as_millis() as usize;
                             self.puzzle = self.solution.goal_path.first().expect("A").clone();
                         }
                     }
@@ -218,7 +222,8 @@ impl eframe::App for RustyPuzzle {
                         }
                     }
                 }
-                ui.label(format!("Cost: {}", self.solution.clone().get_cost()));
+                ui.label(format!("Cost: {} moves", self.solution.clone().get_cost()));
+                ui.label(format!("Time: {} ms", self.time));
             });
             ui.with_layout(egui::Layout::left_to_right(egui::Align::TOP), |ui| {
                 if ui.add(egui::Button::new("Test Case 1")).clicked() {

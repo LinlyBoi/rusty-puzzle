@@ -1,6 +1,6 @@
 use array2d::Array2D;
 
-use crate::find_index;
+use super::find_index;
 
 #[derive(Clone)]
 pub enum Heust {

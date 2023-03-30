@@ -1,10 +1,9 @@
 use std::collections::HashSet;
 
 mod puzzlin;
-use array2d::Array2D;
 use priority_queue::DoublePriorityQueue;
 
-use crate::puzzlin::init_puz;
+use crate::puzzlin::{heuristic::Heust, init_puz, solvers::solve_aystar, Puzzle};
 
 fn main() {
     // let rows = vec![vec![1, 4, 2], vec![3, 5, 8], vec![6, 7, 0]];
@@ -22,12 +21,12 @@ fn main() {
         .into();
     let mut pq: DoublePriorityQueue<Puzzle, usize> = DoublePriorityQueue::new();
     pq.push(test_puzzle, init_h);
-    let solly = solve_aystar(pq, HashSet::new(), crate::heuristic::Heust::Mann).expect("Nope");
+    let solly = solve_aystar(pq, HashSet::new(), Heust::Mann).expect("Nope");
     for step in solly.clone().get_path() {
-        dbg!("funny path:", step.state);
+        dbg!("funny path:", step.getstate());
     }
     dbg!(solly.clone().get_cost());
     for exp in solly.get_explored() {
-        dbg!(exp.cost);
+        dbg!(exp.getcost());
     }
 }

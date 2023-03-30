@@ -2,7 +2,7 @@ use std::collections::{HashSet, VecDeque};
 
 use priority_queue::DoublePriorityQueue;
 
-use crate::{Heust, Puzzle};
+use super::{Heust, Puzzle};
 
 #[derive(Debug, Clone)]
 pub struct Solution {

@@ -1,7 +1,7 @@
-use crate::heuristic::Heust;
 use array2d::Array2D;
-use heuristic::{eucl_heust, mann_heust};
+use heuristic::{eucl_heust, mann_heust, Heust};
 pub mod heuristic;
+pub mod solvers;
 #[cfg(test)]
 mod solverstest;
 #[cfg(test)]
@@ -32,7 +32,7 @@ impl Puzzle {
         self.state
     }
     pub fn getscore(self) -> Array2D<u8> {
-        self.score
+        self.clone().score
     }
 
     pub fn getcost(self) -> usize {

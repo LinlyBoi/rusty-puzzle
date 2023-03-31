@@ -15,9 +15,6 @@ use crate::puzzlin::{
 #[derive(serde::Deserialize, serde::Serialize, Clone)]
 #[serde(default)] // if we add new fields, give them default values when deserializing old state
 pub struct RustyPuzzle {
-    // Example stuff:
-    label: String,
-
     // this how you opt-out of serialization of a member
     #[serde(skip)]
     value: f32,
@@ -42,7 +39,6 @@ impl Default for RustyPuzzle {
     fn default() -> Self {
         Self {
             // Example stuff:
-            label: "Hello World!".to_owned(),
             value: 2.7,
             puzzle: Puzzle::default(),
             solution: Solution::default(),
@@ -74,7 +70,6 @@ impl eframe::App for RustyPuzzle {
     /// Put your widgets into a `SidePanel`, `TopPanel`, `CentralPanel`, `Window` or `Area`.
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         let Self {
-            label,
             value,
             puzzle,
             search_method,
@@ -155,7 +150,7 @@ impl eframe::App for RustyPuzzle {
             ui.with_layout(egui::Layout::bottom_up(egui::Align::LEFT), |ui| {
                 ui.horizontal(|ui| {
                     ui.spacing_mut().item_spacing.x = 0.0;
-                    ui.hyperlink_to("Github Repo", "https://github.com/LinlyBoi/rustypuzzle");
+                    ui.hyperlink_to("Github Repo", "https://github.com/LinlyBoi/rusty-puzzle");
                     ui.label(".");
                 });
             });
@@ -165,7 +160,8 @@ impl eframe::App for RustyPuzzle {
         egui::CentralPanel::default().show(ctx, |ui| {
             // The central panel the region left after adding TopPanel's and SidePanel's
 
-            ui.heading("wow this is not the 8puzle");
+            ui.heading("8 Puzzle Solver");
+            //Grid of 8 puzzle numbers
             egui::Grid::new("grid").show(ui, |ui| {
                 for i in 0..self.puzzle.clone().getstate().row_len() {
                     for j in 0..self.puzzle.clone().getstate().row_len() {
@@ -178,6 +174,7 @@ impl eframe::App for RustyPuzzle {
                 }
             });
             ui.with_layout(egui::Layout::left_to_right(egui::Align::TOP), |ui| {
+                //Solve Button matching based on selected Heuristic and Search Method
                 if ui.add(egui::Button::new("Solve Puzzle")).clicked() {
                     match self.search_method {
                         SearchMethod::BFS => {
@@ -236,14 +233,5 @@ impl eframe::App for RustyPuzzle {
                 }
             });
         });
-
-        if false {
-            egui::Window::new("Window").show(ctx, |ui| {
-                ui.label("Windows can be moved by dragging them.");
-                ui.label("They are automatically sized based on contents.");
-                ui.label("You can turn on resizing and scrolling if you like.");
-                ui.label("You would normally choose either panels OR windows.");
-            });
-        }
     }
 }

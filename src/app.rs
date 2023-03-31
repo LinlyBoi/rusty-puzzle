@@ -1,7 +1,6 @@
 use std::{
     collections::{HashSet, VecDeque},
-    thread,
-    time::Duration,
+    time::Instant,
 };
 
 use priority_queue::DoublePriorityQueue;
@@ -16,9 +15,7 @@ use crate::puzzlin::{
 #[derive(serde::Deserialize, serde::Serialize, Clone)]
 #[serde(default)] // if we add new fields, give them default values when deserializing old state
 pub struct RustyPuzzle {
-    // Example stuff:
-    label: String,
-
+    //Everything the UI needs to have st ored
     // this how you opt-out of serialization of a member
     #[serde(skip)]
     value: f32,
@@ -30,26 +27,28 @@ pub struct RustyPuzzle {
     solution: Solution,
     #[serde(skip)]
     heut: Heust,
-    time: Duration,
+    time: usize,
+    solvable: bool,
 }
 #[derive(Clone)]
 pub enum SearchMethod {
+    //For use with button selection
     BFS,
     DFS,
     AYSTAR,
 }
 
 impl Default for RustyPuzzle {
+    //Default state of GUI data
     fn default() -> Self {
         Self {
-            // Example stuff:
-            label: "Hello World!".to_owned(),
             value: 2.7,
             puzzle: Puzzle::default(),
             solution: Solution::default(),
             search_method: SearchMethod::BFS,
             heut: Heust::Mann,
-            time: Duration::from_secs(0),
+            time: 0,
+            solvable: true,
         }
     }
 }
@@ -72,23 +71,18 @@ impl eframe::App for RustyPuzzle {
     }
 
     /// Called each time the UI needs repainting, which may be many times per second.
-    /// Put your widgets into a `SidePanel`, `TopPanel`, `CentralPanel`, `Window` or `Area`.
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         let Self {
-            label,
             value,
             puzzle,
             search_method,
             solution,
             heut,
             time,
+            solvable,
         } = self;
 
-        // Examples of how to create different panels and windows.
-        // Pick whichever suits you.
-        // Tip: a good default choice is to just keep the `CentralPanel`.
-        // For inspiration and more examples, go to https://emilk.github.io/egui
-
+        //This can also build for wasm (WEB)
         #[cfg(not(target_arch = "wasm32"))] // no File->Quit on web pages!
         egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
             // The top panel is often a good place for a menu bar:
@@ -102,19 +96,17 @@ impl eframe::App for RustyPuzzle {
         });
 
         egui::SidePanel::left("side_panel").show(ctx, |ui| {
-            ui.heading("Side Panel");
             ui.heading("Algorithm Selection");
-            //
-            //
 
+            //matches! macro is used to compare enum variants
             if ui
                 .add(egui::RadioButton::new(
-                    matches!(self.search_method, SearchMethod::BFS),
+                    matches!(self.search_method, SearchMethod::BFS), //marked as selected if true
                     "BFS",
                 ))
                 .clicked()
             {
-                self.search_method = SearchMethod::BFS
+                self.search_method = SearchMethod::BFS //executed upon click
             }
             if ui
                 .add(egui::RadioButton::new(
@@ -157,7 +149,7 @@ impl eframe::App for RustyPuzzle {
             ui.with_layout(egui::Layout::bottom_up(egui::Align::LEFT), |ui| {
                 ui.horizontal(|ui| {
                     ui.spacing_mut().item_spacing.x = 0.0;
-                    ui.hyperlink_to("Github Repo", "https://github.com/LinlyBoi/rustypuzzle");
+                    ui.hyperlink_to("Github Repo", "https://github.com/LinlyBoi/rusty-puzzle");
                     ui.label(".");
                 });
             });
@@ -167,7 +159,8 @@ impl eframe::App for RustyPuzzle {
         egui::CentralPanel::default().show(ctx, |ui| {
             // The central panel the region left after adding TopPanel's and SidePanel's
 
-            ui.heading("wow this is not the 8puzle");
+            ui.heading("8 Puzzle Solver");
+            //Grid of 8 puzzle numbers
             egui::Grid::new("grid").show(ui, |ui| {
                 for i in 0..self.puzzle.clone().getstate().row_len() {
                     for j in 0..self.puzzle.clone().getstate().row_len() {
@@ -180,35 +173,59 @@ impl eframe::App for RustyPuzzle {
                 }
             });
             ui.with_layout(egui::Layout::left_to_right(egui::Align::TOP), |ui| {
+                //Solve Button matching based on selected Heuristic and Search Method
                 if ui.add(egui::Button::new("Solve Puzzle")).clicked() {
                     match self.search_method {
                         SearchMethod::BFS => {
                             let mut frontier = VecDeque::new();
                             frontier.push_back(self.puzzle.clone());
-                            self.solution =
-                                solve_bfs(frontier, HashSet::new()).expect("NO SOLUTION");
-                            self.puzzle = self.solution.goal_path.first().expect("A").clone();
+                            //check if solvable before trying to crash my memory for no reason
+                            match self.puzzle.clone().check_solvable() {
+                                true => {
+                                    let time = Instant::now();
+                                    self.solution =
+                                        solve_bfs(frontier, HashSet::new()).expect("NO SOLUTION");
+                                    self.time = time.elapsed().as_millis() as usize;
+                                    self.puzzle =
+                                        self.solution.goal_path.first().expect("A").clone();
+                                    self.solvable = true;
+                                }
+                                false => self.solvable = false,
+                            }
                         }
-                        SearchMethod::DFS => {
-                            let mut frontier = VecDeque::new();
-                            frontier.push_back(self.puzzle.clone());
-                            self.solution =
-                                solve_dfs(frontier, HashSet::new()).expect("NO SOLUTION");
-                            self.puzzle = self.solution.goal_path.first().expect("A").clone();
-                        }
-                        SearchMethod::AYSTAR => {
-                            let mut frontier: DoublePriorityQueue<Puzzle, usize> =
-                                DoublePriorityQueue::new();
+                        SearchMethod::DFS => match self.puzzle.clone().check_solvable() {
+                            true => {
+                                let mut frontier = VecDeque::new();
+                                frontier.push_back(self.puzzle.clone());
+                                let time = Instant::now();
+                                self.solution =
+                                    solve_dfs(frontier, HashSet::new()).expect("NO SOLUTION");
+                                self.time = time.elapsed().as_millis() as usize;
+                                self.puzzle = self.solution.goal_path.first().expect("A").clone();
+                                self.solvable = true;
+                            }
+                            false => self.solvable = false,
+                        },
+                        SearchMethod::AYSTAR => match self.puzzle.clone().check_solvable() {
+                            true => {
+                                let mut frontier: DoublePriorityQueue<Puzzle, usize> =
+                                    DoublePriorityQueue::new();
 
-                            frontier.push(self.puzzle.clone(), 0);
-                            self.solution =
-                                solve_aystar(frontier, HashSet::new(), self.heut.clone())
-                                    .expect("NO SOLUTION");
-                            self.puzzle = self.solution.goal_path.first().expect("A").clone();
-                        }
+                                frontier.push(self.puzzle.clone(), 0);
+                                let time = Instant::now();
+                                self.solution =
+                                    solve_aystar(frontier, HashSet::new(), self.heut.clone())
+                                        .expect("NO SOLUTION");
+                                self.time = time.elapsed().as_millis() as usize;
+                                self.puzzle = self.solution.goal_path.first().expect("A").clone();
+                                self.solvable = true;
+                            }
+                            false => self.solvable = false,
+                        },
                     }
                 }
                 if ui.add(egui::Button::new("Traverse Path")).clicked() {
+                    //Navigate the tree path by just popping the "stack"
                     let mut path = self.solution.clone().get_path();
                     match path.pop() {
                         None => self.puzzle = Puzzle::default(),
@@ -218,7 +235,10 @@ impl eframe::App for RustyPuzzle {
                         }
                     }
                 }
-                ui.label(format!("Cost: {}", self.solution.clone().get_cost()));
+                //display cost and time elapsed solving
+                ui.label(format!("Cost: {} moves", self.solution.clone().get_cost()));
+                ui.label(format!("Time: {} ms", self.time));
+                ui.label(format!("Solvable: {}", self.solvable))
             });
             ui.with_layout(egui::Layout::left_to_right(egui::Align::TOP), |ui| {
                 if ui.add(egui::Button::new("Test Case 1")).clicked() {
@@ -229,16 +249,14 @@ impl eframe::App for RustyPuzzle {
                     let rows = vec![vec![1, 4, 2], vec![3, 5, 8], vec![6, 7, 0]];
                     self.puzzle = Puzzle::new(rows);
                 }
+                if ui
+                    .add(egui::Button::new("Unsolvable Test Case 1"))
+                    .clicked()
+                {
+                    let rows = vec![vec![8, 1, 2], vec![0, 4, 3], vec![7, 6, 5]];
+                    self.puzzle = Puzzle::new(rows);
+                }
             });
         });
-
-        if false {
-            egui::Window::new("Window").show(ctx, |ui| {
-                ui.label("Windows can be moved by dragging them.");
-                ui.label("They are automatically sized based on contents.");
-                ui.label("You can turn on resizing and scrolling if you like.");
-                ui.label("You would normally choose either panels OR windows.");
-            });
-        }
     }
 }

@@ -58,3 +58,16 @@ fn aystar_eucl() {
     let solly = solve_aystar(pq, HashSet::new(), Heust::Eucl).expect("Nope");
     assert!(solly.get_path().first().expect("??").clone().checkgoal())
 }
+
+#[test]
+fn solvable_test() {
+    let rows = vec![vec![1, 2, 0], vec![3, 4, 5], vec![6, 7, 8]];
+    let test_puzzle = Puzzle::new(rows);
+    assert!(test_puzzle.check_solvable());
+}
+#[test]
+fn unsolvable_test() {
+    let rows = vec![vec![8, 1, 2], vec![0, 4, 3], vec![7, 6, 5]];
+    let test_puzzle = Puzzle::new(rows);
+    assert!(!test_puzzle.check_solvable());
+}

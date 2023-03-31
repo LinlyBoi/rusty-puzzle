@@ -189,6 +189,28 @@ impl Puzzle {
         }
         self
     }
+    pub fn check_solvable(self) -> bool {
+        //turn 2D array into 1D Array
+        let elements = self.state.as_row_major();
+        let mut inversions = 0;
+        for i in 0..elements.len() - 1 {
+            //initialise j
+            let mut j = i + 1;
+            loop {
+                //infinite loop till broken when j is 9
+                if j >= 9 {
+                    break;
+                }
+                //ensure neither values are 0 and check if its an inversion
+                if elements[i] > 0 && elements[j] > 0 && elements[j] > elements[i] {
+                    inversions += 1;
+                }
+                j += 1;
+            }
+        }
+        dbg!(inversions);
+        inversions % 2 == 0
+    }
 }
 
 pub fn init_puz(rows: Vec<Vec<u8>>) -> Puzzle {

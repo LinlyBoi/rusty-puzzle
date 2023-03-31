@@ -15,6 +15,7 @@ use crate::puzzlin::{
 #[derive(serde::Deserialize, serde::Serialize, Clone)]
 #[serde(default)] // if we add new fields, give them default values when deserializing old state
 pub struct RustyPuzzle {
+    //Everything the UI needs to have st ored
     // this how you opt-out of serialization of a member
     #[serde(skip)]
     value: f32,
@@ -27,24 +28,27 @@ pub struct RustyPuzzle {
     #[serde(skip)]
     heut: Heust,
     time: usize,
+    solvable: bool,
 }
 #[derive(Clone)]
 pub enum SearchMethod {
+    //For use with button selection
     BFS,
     DFS,
     AYSTAR,
 }
 
 impl Default for RustyPuzzle {
+    //Default state of GUI data
     fn default() -> Self {
         Self {
-            // Example stuff:
             value: 2.7,
             puzzle: Puzzle::default(),
             solution: Solution::default(),
             search_method: SearchMethod::BFS,
             heut: Heust::Mann,
             time: 0,
+            solvable: true,
         }
     }
 }
@@ -67,7 +71,6 @@ impl eframe::App for RustyPuzzle {
     }
 
     /// Called each time the UI needs repainting, which may be many times per second.
-    /// Put your widgets into a `SidePanel`, `TopPanel`, `CentralPanel`, `Window` or `Area`.
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         let Self {
             value,
@@ -76,13 +79,10 @@ impl eframe::App for RustyPuzzle {
             solution,
             heut,
             time,
+            solvable,
         } = self;
 
-        // Examples of how to create different panels and windows.
-        // Pick whichever suits you.
-        // Tip: a good default choice is to just keep the `CentralPanel`.
-        // For inspiration and more examples, go to https://emilk.github.io/egui
-
+        //This can also build for wasm (WEB)
         #[cfg(not(target_arch = "wasm32"))] // no File->Quit on web pages!
         egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
             // The top panel is often a good place for a menu bar:
@@ -98,14 +98,15 @@ impl eframe::App for RustyPuzzle {
         egui::SidePanel::left("side_panel").show(ctx, |ui| {
             ui.heading("Algorithm Selection");
 
+            //matches! macro is used to compare enum variants
             if ui
                 .add(egui::RadioButton::new(
-                    matches!(self.search_method, SearchMethod::BFS),
+                    matches!(self.search_method, SearchMethod::BFS), //marked as selected if true
                     "BFS",
                 ))
                 .clicked()
             {
-                self.search_method = SearchMethod::BFS
+                self.search_method = SearchMethod::BFS //executed upon click
             }
             if ui
                 .add(egui::RadioButton::new(
@@ -178,36 +179,53 @@ impl eframe::App for RustyPuzzle {
                         SearchMethod::BFS => {
                             let mut frontier = VecDeque::new();
                             frontier.push_back(self.puzzle.clone());
-                            let time = Instant::now();
-                            self.solution =
-                                solve_bfs(frontier, HashSet::new()).expect("NO SOLUTION");
-                            self.time = time.elapsed().as_millis() as usize;
-                            self.puzzle = self.solution.goal_path.first().expect("A").clone();
+                            //check if solvable before trying to crash my memory for no reason
+                            match self.puzzle.clone().check_solvable() {
+                                true => {
+                                    let time = Instant::now();
+                                    self.solution =
+                                        solve_bfs(frontier, HashSet::new()).expect("NO SOLUTION");
+                                    self.time = time.elapsed().as_millis() as usize;
+                                    self.puzzle =
+                                        self.solution.goal_path.first().expect("A").clone();
+                                    self.solvable = true;
+                                }
+                                false => self.solvable = false,
+                            }
                         }
-                        SearchMethod::DFS => {
-                            let mut frontier = VecDeque::new();
-                            frontier.push_back(self.puzzle.clone());
-                            let time = Instant::now();
-                            self.solution =
-                                solve_dfs(frontier, HashSet::new()).expect("NO SOLUTION");
-                            self.time = time.elapsed().as_millis() as usize;
-                            self.puzzle = self.solution.goal_path.first().expect("A").clone();
-                        }
-                        SearchMethod::AYSTAR => {
-                            let mut frontier: DoublePriorityQueue<Puzzle, usize> =
-                                DoublePriorityQueue::new();
+                        SearchMethod::DFS => match self.puzzle.clone().check_solvable() {
+                            true => {
+                                let mut frontier = VecDeque::new();
+                                frontier.push_back(self.puzzle.clone());
+                                let time = Instant::now();
+                                self.solution =
+                                    solve_dfs(frontier, HashSet::new()).expect("NO SOLUTION");
+                                self.time = time.elapsed().as_millis() as usize;
+                                self.puzzle = self.solution.goal_path.first().expect("A").clone();
+                                self.solvable = true;
+                            }
+                            false => self.solvable = false,
+                        },
+                        SearchMethod::AYSTAR => match self.puzzle.clone().check_solvable() {
+                            true => {
+                                let mut frontier: DoublePriorityQueue<Puzzle, usize> =
+                                    DoublePriorityQueue::new();
 
-                            frontier.push(self.puzzle.clone(), 0);
-                            let time = Instant::now();
-                            self.solution =
-                                solve_aystar(frontier, HashSet::new(), self.heut.clone())
-                                    .expect("NO SOLUTION");
-                            self.time = time.elapsed().as_millis() as usize;
-                            self.puzzle = self.solution.goal_path.first().expect("A").clone();
-                        }
+                                frontier.push(self.puzzle.clone(), 0);
+                                let time = Instant::now();
+                                self.solution =
+                                    solve_aystar(frontier, HashSet::new(), self.heut.clone())
+                                        .expect("NO SOLUTION");
+                                self.time = time.elapsed().as_millis() as usize;
+                                self.puzzle = self.solution.goal_path.first().expect("A").clone();
+                                self.solvable = true;
+                            }
+                            false => self.solvable = false,
+                        },
                     }
                 }
                 if ui.add(egui::Button::new("Traverse Path")).clicked() {
+                    //Navigate the tree path by just popping the "stack"
                     let mut path = self.solution.clone().get_path();
                     match path.pop() {
                         None => self.puzzle = Puzzle::default(),
@@ -217,8 +235,10 @@ impl eframe::App for RustyPuzzle {
                         }
                     }
                 }
+                //display cost and time elapsed solving
                 ui.label(format!("Cost: {} moves", self.solution.clone().get_cost()));
                 ui.label(format!("Time: {} ms", self.time));
+                ui.label(format!("Solvable: {}", self.solvable))
             });
             ui.with_layout(egui::Layout::left_to_right(egui::Align::TOP), |ui| {
                 if ui.add(egui::Button::new("Test Case 1")).clicked() {
@@ -227,6 +247,13 @@ impl eframe::App for RustyPuzzle {
                 }
                 if ui.add(egui::Button::new("Test Case 2")).clicked() {
                     let rows = vec![vec![1, 4, 2], vec![3, 5, 8], vec![6, 7, 0]];
+                    self.puzzle = Puzzle::new(rows);
+                }
+                if ui
+                    .add(egui::Button::new("Unsolvable Test Case 1"))
+                    .clicked()
+                {
+                    let rows = vec![vec![8, 1, 2], vec![0, 4, 3], vec![7, 6, 5]];
                     self.puzzle = Puzzle::new(rows);
                 }
             });

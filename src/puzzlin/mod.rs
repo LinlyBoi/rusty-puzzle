@@ -208,7 +208,7 @@ impl Puzzle {
                 j += 1;
             }
         }
-        dbg!(inversions);
+        // dbg!(inversions);
         inversions % 2 == 0
     }
 }

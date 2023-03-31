@@ -97,8 +97,6 @@ impl eframe::App for RustyPuzzle {
 
         egui::SidePanel::left("side_panel").show(ctx, |ui| {
             ui.heading("Algorithm Selection");
-            //
-            //
 
             if ui
                 .add(egui::RadioButton::new(

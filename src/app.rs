@@ -3,6 +3,7 @@ use std::{
     time::Instant,
 };
 
+use array2d::Array2D;
 use priority_queue::DoublePriorityQueue;
 
 use crate::puzzlin::{
@@ -146,6 +147,21 @@ impl eframe::App for RustyPuzzle {
             {
                 self.heut = Heust::Eucl
             }
+            if ui.button("Randomise Puzzle").clicked() {
+                //Turn 2D array into 1D Vector to randomise
+                use itertools::Itertools;
+                use rand::seq::IteratorRandom;
+                let row_major = self.puzzle.clone().getstate().as_row_major();
+                let possible_rows = row_major.clone().into_iter().permutations(row_major.len());
+                let mut rng = rand::thread_rng();
+                match possible_rows.choose(&mut rng) {
+                    Some(state) => {
+                        self.puzzle =
+                            Puzzle::from_2d(Array2D::from_row_major(&state, 3, 3).expect("nah"))
+                    }
+                    None => self.puzzle = Puzzle::default(), //error handling
+                };
+            }
             ui.with_layout(egui::Layout::bottom_up(egui::Align::LEFT), |ui| {
                 ui.horizontal(|ui| {
                     ui.spacing_mut().item_spacing.x = 0.0;
@@ -164,16 +180,14 @@ impl eframe::App for RustyPuzzle {
             egui::Grid::new("grid").show(ui, |ui| {
                 for i in 0..self.puzzle.clone().getstate().row_len() {
                     for j in 0..self.puzzle.clone().getstate().row_len() {
-                        _ = ui.button(format!(
-                            " {} ",
-                            self.puzzle.clone().getstate()[(i, j)].to_string()
-                        ));
+                        _ = ui.button(format!(" {} ", self.puzzle.clone().getstate()[(i, j)]));
                     }
                     ui.end_row();
                 }
             });
             ui.with_layout(egui::Layout::left_to_right(egui::Align::TOP), |ui| {
                 //Solve Button matching based on selected Heuristic and Search Method
+                if ui.button("Input Puzzle").clicked() {}
                 if ui.add(egui::Button::new("Solve Puzzle")).clicked() {
                     match self.search_method {
                         SearchMethod::BFS => {

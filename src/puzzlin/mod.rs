@@ -52,6 +52,17 @@ impl Puzzle {
             cost: 0,
         }
     }
+    pub fn from_2d(twodee: Array2D<u8>) -> Self {
+        let (zx, zy): (usize, usize) = find_index(twodee.clone(), 0).expect("OUT OF BOUNDS");
+        Puzzle {
+            neighbours: vec![],
+            parent: None,
+            state: twodee,
+            zeropos: (zx, zy),
+            score: Array2D::filled_with(0, 3, 3),
+            cost: 0,
+        }
+    }
     pub fn getzero(self) -> (usize, usize) {
         self.zeropos
     }

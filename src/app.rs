@@ -204,7 +204,11 @@ impl eframe::App for RustyPuzzle {
                                         self.solution.goal_path.first().expect("A").clone();
                                     self.solvable = true;
                                 }
-                                false => self.solvable = false,
+                                false => {
+                                    self.solvable = false;
+                                    self.solution = Solution::default();
+                                    self.time = 0;
+                                }
                             }
                         }
                         SearchMethod::DFS => match self.puzzle.clone().check_solvable() {
@@ -218,7 +222,11 @@ impl eframe::App for RustyPuzzle {
                                 self.puzzle = self.solution.goal_path.first().expect("A").clone();
                                 self.solvable = true;
                             }
-                            false => self.solvable = false,
+                            false => {
+                                self.solvable = false;
+                                self.solution = Solution::default();
+                                self.time = 0;
+                            }
                         },
                         SearchMethod::AYSTAR => match self.puzzle.clone().check_solvable() {
                             true => {
@@ -234,7 +242,11 @@ impl eframe::App for RustyPuzzle {
                                 self.puzzle = self.solution.goal_path.first().expect("A").clone();
                                 self.solvable = true;
                             }
-                            false => self.solvable = false,
+                            false => {
+                                self.solvable = false;
+                                self.solution = Solution::default();
+                                self.time = 0;
+                            }
                         },
                     }
                 }

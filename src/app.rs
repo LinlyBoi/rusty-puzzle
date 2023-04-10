@@ -187,7 +187,7 @@ impl eframe::App for RustyPuzzle {
             });
             ui.with_layout(egui::Layout::left_to_right(egui::Align::TOP), |ui| {
                 //Solve Button matching based on selected Heuristic and Search Method
-                if ui.button("Input Puzzle").clicked() {}
+                // if ui.button("Input Puzzle").clicked() {}
                 if ui.add(egui::Button::new("Solve Puzzle")).clicked() {
                     match self.search_method {
                         SearchMethod::BFS => {

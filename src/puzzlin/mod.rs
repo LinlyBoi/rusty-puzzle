@@ -138,13 +138,14 @@ impl Puzzle {
             children.push(temp_child);
         }
         match h {
-            Heust::NoH => {}
+            Heust::NoH => self.neighbours = children,
             Heust::Mann => {
                 let mut mann_children: Vec<Puzzle> = vec![];
                 for mut child in children.clone() {
                     child.cost = self.cost + 1;
                     mann_children.push(child.calc_mann());
                 }
+                self.neighbours = mann_children;
             }
             Heust::Eucl => {
                 let mut eucl_children: Vec<Puzzle> = vec![];
@@ -152,9 +153,9 @@ impl Puzzle {
                     child.cost = self.cost + 1;
                     eucl_children.push(child.calc_eucl());
                 }
+                self.neighbours = eucl_children;
             }
         }
-        self.neighbours = children;
         self
     }
 
